@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>演示文稿标题</title>
+  <link rel="stylesheet" href="dist/reset.css">
+  <link rel="stylesheet" href="dist/reveal.css">
+  <link rel="stylesheet" href="dist/theme/white.css">
+  <link rel="stylesheet" href="dist/plugin/highlight/monokai.css">
+
+  <style>
+    /* ── 字体加载（全部本地 font/）── */
+    @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap; src: url('font/inter/Inter-Regular.woff2') format('woff2'); }
+    @font-face { font-family: 'Inter'; font-style: normal; font-weight: 500; font-display: swap; src: url('font/inter/Inter-Medium.woff2') format('woff2'); }
+    @font-face { font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap; src: url('font/inter/Inter-SemiBold.woff2') format('woff2'); }
+    @font-face { font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap; src: url('font/inter/Inter-Bold.woff2') format('woff2'); }
+
+    @font-face { font-family: 'Comic Neue'; font-style: normal; font-weight: 300; font-display: swap; src: url('font/comic-neue/ComicNeue-Light.woff2') format('woff2'); }
+    @font-face { font-family: 'Comic Neue'; font-style: normal; font-weight: 400; font-display: swap; src: url('font/comic-neue/ComicNeue-Regular.woff2') format('woff2'); }
+    @font-face { font-family: 'Comic Neue'; font-style: normal; font-weight: 500; font-display: swap; src: url('font/comic-neue/ComicNeue-Regular.woff2') format('woff2'); }
+    @font-face { font-family: 'Comic Neue'; font-style: normal; font-weight: 600; font-display: swap; src: url('font/comic-neue/ComicNeue-Bold.woff2') format('woff2'); }
+    @font-face { font-family: 'Comic Neue'; font-style: normal; font-weight: 700; font-display: swap; src: url('font/comic-neue/ComicNeue-Bold.woff2') format('woff2'); }
+    @font-face { font-family: 'Comic Neue'; font-style: italic; font-weight: 400; font-display: swap; src: url('font/comic-neue/ComicNeue-Italic.woff2') format('woff2'); }
+    @font-face { font-family: 'Comic Neue'; font-style: italic; font-weight: 700; font-display: swap; src: url('font/comic-neue/ComicNeue-BoldItalic.woff2') format('woff2'); }
+
+    @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('font/jetbrains-mono/JetBrainsMono-Regular.woff2') format('woff2'); }
+    @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 500; font-display: swap; src: url('font/jetbrains-mono/JetBrainsMono-Medium.woff2') format('woff2'); }
+
+    @font-face { font-family: 'Noto Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('font/noto-sans-sc/NotoSansSC-Regular.woff2') format('woff2'); }
+    @font-face { font-family: 'Noto Sans SC'; font-style: normal; font-weight: 500; font-display: swap; src: url('font/noto-sans-sc/NotoSansSC-Medium.woff2') format('woff2'); }
+    @font-face { font-family: 'Noto Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('font/noto-sans-sc/NotoSansSC-Bold.woff2') format('woff2'); }
+  </style>
+
+  <style>
+    /* ══ 配色变量（米色系）══
+       主背景  #FAF8F4  暖米白
+       卡片底  #F5EFE6  暖奶油
+       铜橙强调  #C8956C / 深 #8B5E3C
+       赤陶辅色  #B85450
+       鼠尾草辅色  #4F8B68
+       边框    #E0D5C5
+       灰文字  #9A8878
+    */
+
+    body, .reveal { background: #FAF8F4 !important; }
+    :root { --r-heading-text-transform: none; }
+
+    .reveal { font-size: 56px; }
+    .reveal h1 { font-size: 2.0em; }
+    .reveal h2 { font-size: 1.55em; }
+    .reveal h3 { font-size: 1.25em; }
+
+    :root {
+      --font-zh: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --font-en: "Comic Neue", "Inter", -apple-system, "Helvetica Neue", Arial, sans-serif;
+      --font-display: "Comic Neue", "Inter", -apple-system, sans-serif;
+      --font-mono: "JetBrains Mono", "SF Mono", Consolas, Menlo, monospace;
+    }
+
+    body, .reveal, .reveal section, .reveal p, .reveal li, .reveal td, .reveal div, .reveal span {
+      font-family: var(--font-en), var(--font-zh);
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+    }
+    .reveal h1 {
+      font-family: var(--font-display), var(--font-zh);
+      font-weight: 700;
+      letter-spacing: -0.005em;
+    }
+    .reveal h2, .reveal h3, .reveal h4 {
+      font-family: var(--font-en), var(--font-zh);
+      font-weight: 700;
+      letter-spacing: -0.005em;
+    }
+    .reveal strong, .reveal b {
+      font-family: var(--font-en), var(--font-zh);
+      font-weight: 600;
+    }
+    .reveal code, .reveal pre {
+      font-family: var(--font-mono);
+      font-feature-settings: "calt", "ss01";
+    }
+    .floating-nav, .floating-nav a {
+      font-family: var(--font-en), var(--font-zh);
+    }
+
+    body, .reveal, .reveal section {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    .reveal h1, .reveal h2, .reveal h3, .reveal h4 { text-wrap: balance; }
+    .reveal p, .reveal li, .reveal td { text-wrap: pretty; }
+    .reveal section > div div,
+    .reveal .arch-box,
+    .reveal .pipe-step,
+    .reveal .eq-row .c-dim { text-wrap: balance; }
+
+    .reveal mjx-container[jax="SVG"] svg { shape-rendering: geometricPrecision; }
+    .reveal .eq-row.fragment { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+    .reveal .slides, .reveal .slides section { transform-style: flat !important; backface-visibility: hidden; }
+
+    /* ── 浮动导航 ── */
+    .floating-nav {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex;
+      gap: 4px;
+      background: rgba(28,18,9,0.88);
+      backdrop-filter: blur(12px);
+      padding: 7px 14px;
+      border-radius: 40px;
+      font-family: var(--font-en), var(--font-zh);
+      border: 1px solid rgba(200,149,108,0.20);
+    }
+    .floating-nav a {
+      color: #B8A090;
+      text-decoration: none;
+      padding: 4px 11px;
+      border-radius: 20px;
+      font-size: 14px;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .floating-nav a:hover  { color: #FAF0E0; background: rgba(200,149,108,0.18); }
+    .floating-nav a.active { color: #FAF0E0; background: rgba(200,149,108,0.38); }
+    .floating-nav a em { font-style: normal; font-size: 0.76em; opacity: 0.50; margin-left: 3px; }
+    .nav-sep { color: rgba(200,149,108,0.35); padding: 0 3px; font-size: 13px; align-self: center; }
+
+    /* ── 架构卡片 ── */
+    .arch-box {
+      background: #F5EFE6;
+      border: 2px solid #C8956C;
+      border-radius: 8px;
+      padding: 9px 16px;
+      text-align: center;
+      font-size: 0.6em;
+    }
+    .arch-arrow { text-align: center; color: #9A8878; font-size: 0.65em; margin: 2px 0; }
+    .stat-badge {
+      display: inline-block;
+      background: #F5EFE6;
+      border: 1px solid #E0D5C5;
+      border-radius: 20px;
+      padding: 3px 14px;
+      font-size: 0.55em;
+      font-weight: bold;
+      color: #8B5E3C;
+      margin: 3px;
+    }
+
+    /* ── 辅助文字 ── */
+    .c-dim { color: #9A8878; font-size: 0.92em; font-weight: 400; }
+
+    /* ── 公式步骤行 ── */
+    .eq-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #F7F2EA;
+      border-left: 4px solid #C8956C;
+      border-radius: 0 8px 8px 0;
+      padding: 7px 14px;
+      margin: 6px 0;
+      font-size: 0.68em;
+    }
+    .eq-row .label {
+      min-width: 78px;
+      font-weight: bold;
+      color: #C8956C;
+      font-size: 0.94em;
+    }
+    .eq-row .c-dim { font-size: 0.94em; color: #7A6055; }
+    .eq-row mjx-container[display="true"] { margin: 0 !important; text-align: left !important; }
+    .eq-row mjx-container { text-align: left; }
+
+    /* ── 终端风格代码框 ── */
+    .code-theater {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 14px 48px rgba(28,18,9,0.35), 0 0 0 1px rgba(200,149,108,0.12);
+      margin: 0 auto;
+      padding-bottom: 28px;
+      background: #272822;
+    }
+    .theater-bar {
+      background: #2A1E14;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 28px;
+    }
+    .dot   { width: 13px; height: 13px; border-radius: 50%; display: inline-block; }
+    .d-r   { background: #ff5f57; }
+    .d-y   { background: #febc2e; }
+    .d-g   { background: #28c840; }
+    .theater-fname {
+      color: #9A7A62;
+      font-size: 0.45em;
+      font-family: var(--font-mono);
+      margin-left: 10px;
+    }
+    .code-theater pre {
+      margin: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      background: #272822 !important;
+      max-height: none !important;
+      height: auto !important;
+      overflow: hidden !important;
+    }
+    .code-theater pre code {
+      font-size: 0.66em !important;
+      line-height: 1.5 !important;
+      max-height: none !important;
+      height: auto !important;
+      overflow: hidden !important;
+      white-space: pre !important;
+    }
+    .code-theater, .code-theater * { max-height: none !important; }
+
+    /* ── 注释气泡 ── */
+    .ann {
+      display: inline-block;
+      background: rgba(200,149,108,0.14);
+      border: 1px solid rgba(200,149,108,0.40);
+      border-radius: 6px;
+      padding: 2px 10px;
+      font-size: 0.85em;
+      color: #8B5E3C;
+      margin: 2px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+    .ann.r { background: rgba(184,84,80,0.10); border-color: rgba(184,84,80,0.35); color: #B85450; }
+    .ann.g { background: rgba(79,139,104,0.10); border-color: rgba(79,139,104,0.35); color: #4F8B68; }
+
+    /* ── 图层标签 ── */
+    .layer-label {
+      font-size: 0.48em;
+      font-weight: bold;
+      color: #6B6055;
+      text-align: center;
+      margin-bottom: 2px;
+    }
+
+    /* ── 管线流程图 ── */
+    .pipeline {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      width: 96%;
+      margin: 12px auto 0;
+    }
+    .pipe-step {
+      flex: 1;
+      background: #F5EFE6;
+      border: 1.5px solid #E0D5C5;
+      border-radius: 8px;
+      padding: 10px 6px 8px;
+      text-align: center;
+      position: relative;
+    }
+    .pipe-step .ps-num {
+      position: absolute;
+      top: -11px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #C8956C;
+      color: #fff;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 0.45em;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pipe-step .ps-title { font-weight: bold; color: #8B5E3C; font-size: 0.52em; margin-top: 4px; }
+    .pipe-step .ps-sub   { color: #8A7868; font-size: 0.48em; margin-top: 3px; line-height: 1.4; }
+    .pipe-arrow { align-self: center; color: #C8B09A; font-size: 0.65em; padding: 0 3px; flex-shrink: 0; }
+
+    /* ── 代码 + 侧注 布局 ── */
+    .code-split { display: flex; gap: 12px; align-items: stretch; width: 100%; margin: 0 auto; }
+    .code-split-left  { flex: 4; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+    .code-split-right { flex: 1; min-width: 150px; max-width: 280px; display: flex; flex-direction: column; gap: 8px; padding-top: 46px; }
+    .code-split-left .code-theater { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .code-split-left .code-theater pre { flex: 1; overflow: hidden !important; }
+    .code-split-left .code-theater pre code { overflow: hidden !important; white-space: pre; }
+    .code-split-left .code-theater pre code { font-size: 0.88em !important; }
+    .ann-card {
+      background: #F7F2EA;
+      border-left: 3px solid #C8956C;
+      border-radius: 0 8px 8px 0;
+      padding: 9px 14px;
+      font-size: 0.58em;
+      color: #3A2C24;
+      line-height: 1.5;
+    }
+    .ann-card strong { color: #8B5E3C; }
+    .ann-card.r { border-color: #B85450; }
+    .ann-card.r strong { color: #B85450; }
+    .ann-card.g { border-color: #4F8B68; }
+    .ann-card.g strong { color: #4F8B68; }
+    .ann-card code { font-size: 0.9em; background: rgba(60,40,20,0.07); padding: 1px 5px; border-radius: 3px; }
+
+    /* ── 扇形地图 ── */
+    #fan-overview { font-family: var(--font-en), var(--font-zh); }
+  </style>
+</head>
+<body>
+
+  <!-- ══ 浮动导航：修改 href="#/N" 和 data-from/data-to 以匹配实际页码 ══ -->
+  <div class="floating-nav" id="floatingNav">
+    <a href="#/0" data-from="0" data-to="0">封面</a>
+    <span class="nav-sep">·</span>
+    <a href="#/1" data-from="1" data-to="2">内容 <em>2–3</em></a>
+    <a href="#/3" data-from="3" data-to="3">代码 <em>4</em></a>
+    <span class="nav-sep">·</span>
+    <a href="#/4" data-from="4" data-to="4">总结 <em>5</em></a>
+  </div>
+
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- ══ Slide 0: 封面 ══ -->
+      <section data-background-gradient="linear-gradient(150deg,#FAF7F0 0%,#F2E8D8 55%,#EDE0CA 100%)">
+
+        <!-- 左上角暖光晕 -->
+        <div style="position:absolute;top:-10%;left:-8%;width:50%;height:55%;
+                    background:radial-gradient(circle,rgba(200,149,108,0.12) 0%,transparent 65%);
+                    pointer-events:none;"></div>
+        <!-- 右下角暖光晕 -->
+        <div style="position:absolute;bottom:-8%;right:-6%;width:38%;height:44%;
+                    background:radial-gradient(circle,rgba(180,120,70,0.09) 0%,transparent 65%);
+                    pointer-events:none;"></div>
+
+        <!-- 顶部装饰线 -->
+        <div style="width:80px;height:3px;margin:0 auto 36px;border-radius:2px;
+                    background:linear-gradient(90deg,#C8956C,#D4A878,#C8956C);"></div>
+
+        <!-- 主标题 -->
+        <div style="font-size:2.8em;font-weight:800;color:#2C1F14;
+                    line-height:1.15;letter-spacing:-0.015em;margin-bottom:10px;">
+          演示文稿主标题
+        </div>
+
+        <!-- 主题标签 -->
+        <div style="font-size:1.5em;font-weight:700;color:#C8956C;
+                    letter-spacing:0.28em;text-transform:uppercase;margin-bottom:26px;">
+          主题标签
+        </div>
+
+        <!-- 副标题 -->
+        <p style="font-size:0.72em;color:#6B5040;margin:0 auto 30px;
+                  max-width:680px;line-height:1.7;font-weight:600;">
+          副标题描述占位文字，简要说明本次演示的内容与目的
+        </p>
+
+        <!-- 横向分隔渐变线 -->
+        <div style="width:340px;height:1px;margin:0 auto 26px;
+                    background:linear-gradient(90deg,transparent,rgba(200,149,108,0.50),transparent);"></div>
+
+        <!-- 作者信息 -->
+        <div style="display:flex;justify-content:center;align-items:center;gap:28px;font-size:0.54em;font-weight:700;color:#8B5E3C;letter-spacing:0.03em;margin-bottom:14px;">
+          <span>汇报人 &nbsp;姓名占位</span>
+          <span style="color:rgba(200,149,108,0.45);font-weight:300;">|</span>
+          <span style="font-weight:500;color:#A07050;">YYYY-MM-DD</span>
+        </div>
+
+        <!-- 摘要说明 -->
+        <p style="font-size:0.36em;color:rgba(154,112,88,0.65);margin:28px auto 0;max-width:540px;line-height:2.0;font-weight:400;">
+          一句话总结核心内容<br>
+          第二行补充信息占位
+        </p>
+      </section>
+
+      <!-- ══ Slide 1: 卡片网格布局示例 ══ -->
+      <section>
+        <h2 style="margin-bottom:6px;">节标题占位</h2>
+        <p style="font-size:0.50em;color:#9A8878;margin:0 0 12px 0;">
+          副说明文字占位，对本节内容的一句话概括
+        </p>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;width:96%;margin:0 auto;">
+
+          <!-- 卡片 1 -->
+          <div style="background:#F5EFE6;border-left:4px solid #C8956C;border-radius:0 8px 8px 0;padding:10px 14px;">
+            <div style="font-size:0.58em;font-weight:bold;color:#8B5E3C;">卡片标题 A &nbsp;<span style="font-size:0.78em;color:#9A8878;font-weight:normal;">Subtitle</span></div>
+            <div style="font-size:0.46em;color:#5A4030;line-height:1.6;margin-top:4px;">
+              卡片内容占位文字，描述该条目的核心概念。<em>可以包含斜体补充说明。</em>
+            </div>
+          </div>
+
+          <!-- 卡片 2 -->
+          <div style="background:#F5EFE6;border-left:4px solid #C8956C;border-radius:0 8px 8px 0;padding:10px 14px;">
+            <div style="font-size:0.58em;font-weight:bold;color:#8B5E3C;">卡片标题 B &nbsp;<span style="font-size:0.78em;color:#9A8878;font-weight:normal;">Subtitle</span></div>
+            <div style="font-size:0.46em;color:#5A4030;line-height:1.6;margin-top:4px;">
+              卡片内容占位文字，可以包含<strong>加粗强调</strong>和数字指标 <strong>XX%</strong>。
+            </div>
+          </div>
+
+          <!-- 卡片 3 -->
+          <div style="background:#F5EFE6;border-left:4px solid #C8956C;border-radius:0 8px 8px 0;padding:10px 14px;">
+            <div style="font-size:0.58em;font-weight:bold;color:#8B5E3C;">卡片标题 C &nbsp;<span style="font-size:0.78em;color:#9A8878;font-weight:normal;">Subtitle</span></div>
+            <div style="font-size:0.46em;color:#5A4030;line-height:1.6;margin-top:4px;">
+              卡片内容占位文字，可以嵌套使用 <code>code</code> 样式标注术语。
+            </div>
+          </div>
+
+          <!-- 卡片 4（赤陶色变体） -->
+          <div style="background:#F5EFE6;border-left:4px solid #B85450;border-radius:0 8px 8px 0;padding:10px 14px;">
+            <div style="font-size:0.58em;font-weight:bold;color:#B85450;">卡片标题 D &nbsp;<span style="font-size:0.78em;color:#9A8878;font-weight:normal;">红色变体</span></div>
+            <div style="font-size:0.46em;color:#5A4030;line-height:1.6;margin-top:4px;">
+              使用 <code>#B85450</code> 边框表示警示或重要信息。
+            </div>
+          </div>
+
+          <!-- 卡片 5（鼠尾草色变体） -->
+          <div style="background:#F5EFE6;border-left:4px solid #4F8B68;border-radius:0 8px 8px 0;padding:10px 14px;">
+            <div style="font-size:0.58em;font-weight:bold;color:#4F8B68;">卡片标题 E &nbsp;<span style="font-size:0.78em;color:#9A8878;font-weight:normal;">绿色变体</span></div>
+            <div style="font-size:0.46em;color:#5A4030;line-height:1.6;margin-top:4px;">
+              使用 <code>#4F8B68</code> 边框表示正向结果或成功状态。
+            </div>
+          </div>
+
+          <!-- 卡片 6（徽章示例） -->
+          <div style="background:#F5EFE6;border-left:4px solid #C8956C;border-radius:0 8px 8px 0;padding:10px 14px;">
+            <div style="font-size:0.58em;font-weight:bold;color:#8B5E3C;">卡片标题 F &nbsp;<span style="font-size:0.78em;color:#9A8878;font-weight:normal">徽章示例</span></div>
+            <div style="font-size:0.46em;color:#5A4030;line-height:1.8;margin-top:4px;">
+              指标徽章示例：
+              <span class="stat-badge">指标 A: XX</span>
+              <span class="stat-badge">指标 B: YY%</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ══ Slide 2: 管线流程图示例 ══ -->
+      <section>
+        <h2 style="margin-bottom:4px;">管线流程布局示例</h2>
+        <p style="font-size:0.50em;color:#9A8878;margin:0 0 20px 0;">
+          使用 <code>.pipeline</code> + <code>.pipe-step</code> 组件呈现有序步骤流程
+        </p>
+
+        <div class="pipeline">
+          <div class="pipe-step">
+            <div class="ps-num">1</div>
+            <div class="ps-title">步骤标题 A</div>
+            <div class="ps-sub">步骤说明占位<br>可换行描述</div>
+          </div>
+          <div class="pipe-arrow">→</div>
+
+          <div class="pipe-step">
+            <div class="ps-num">2</div>
+            <div class="ps-title">步骤标题 B</div>
+            <div class="ps-sub">步骤说明占位<br>可换行描述</div>
+          </div>
+          <div class="pipe-arrow">→</div>
+
+          <div class="pipe-step">
+            <div class="ps-num">3</div>
+            <div class="ps-title">步骤标题 C</div>
+            <div class="ps-sub">步骤说明占位<br>可换行描述</div>
+          </div>
+          <div class="pipe-arrow">→</div>
+
+          <div class="pipe-step">
+            <div class="ps-num">4</div>
+            <div class="ps-title">步骤标题 D</div>
+            <div class="ps-sub">步骤说明占位<br>可换行描述</div>
+          </div>
+          <div class="pipe-arrow">→</div>
+
+          <div class="pipe-step">
+            <div class="ps-num">5</div>
+            <div class="ps-title">步骤标题 E</div>
+            <div class="ps-sub">步骤说明占位<br>可换行描述</div>
+          </div>
+        </div>
+
+        <!-- 公式步骤行示例 -->
+        <div style="margin-top:28px;width:90%;margin-left:auto;margin-right:auto;">
+          <div class="eq-row fragment">
+            <span class="label">步骤名称</span>
+            <span>$\text{公式或表达式占位} = f(x)$</span>
+            <span class="c-dim">说明文字</span>
+          </div>
+          <div class="eq-row fragment">
+            <span class="label">步骤名称</span>
+            <span>$\text{公式或表达式占位} = g(x, y)$</span>
+            <span class="c-dim">说明文字</span>
+          </div>
+          <div class="eq-row fragment">
+            <span class="label">输出结果</span>
+            <span>$\hat{y} = \text{最终表达式}$</span>
+            <span class="c-dim"><span class="ann g">结论标签</span></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ Slide 3: 代码 + 侧注布局示例 ══ -->
+      <section>
+        <h2 style="margin-bottom:8px;">代码 + 侧注布局示例</h2>
+
+        <div class="code-split">
+          <!-- 左：代码框 -->
+          <div class="code-split-left">
+            <div class="code-theater">
+              <div class="theater-bar">
+                <span class="dot d-r"></span>
+                <span class="dot d-y"></span>
+                <span class="dot d-g"></span>
+                <span class="theater-fname">your_file.py</span>
+              </div>
+              <pre><code class="language-python">
+# 代码内容占位
+import your_library as lib
+
+class YourClass:
+    """类说明占位"""
+
+    def __init__(self, param_a, param_b):
+        self.param_a = param_a          # 参数 A 说明
+        self.param_b = param_b          # 参数 B 说明
+
+    def your_method(self, x):
+        """方法说明占位"""
+        # 步骤 1：预处理
+        processed = self._preprocess(x)
+
+        # 步骤 2：核心计算
+        result = lib.compute(
+            processed,
+            mode=self.param_a,
+            scale=self.param_b,
+        )
+
+        # 步骤 3：后处理并返回
+        return self._postprocess(result)
+
+    def _preprocess(self, x):
+        return x  # 占位实现
+
+    def _postprocess(self, x):
+        return x  # 占位实现
+              </code></pre>
+            </div>
+          </div>
+
+          <!-- 右：侧注卡片 -->
+          <div class="code-split-right">
+            <div class="ann-card">
+              <strong>注释 A</strong><br>
+              对左侧代码第一个关键点的说明文字占位，可引用 <code>param_a</code>。
+            </div>
+            <div class="ann-card r">
+              <strong>注释 B（警示）</strong><br>
+              使用红色变体高亮需要注意的逻辑或风险点。
+            </div>
+            <div class="ann-card g">
+              <strong>注释 C（正向）</strong><br>
+              使用绿色变体高亮核心优化点或良好设计。
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ Slide 4: 总结 ══ -->
+      <section data-background-gradient="linear-gradient(150deg,#FAF7F0 0%,#F2E8D8 55%,#EDE0CA 100%)">
+
+        <div style="position:absolute;top:-10%;left:-8%;width:50%;height:55%;
+                    background:radial-gradient(circle,rgba(200,149,108,0.10) 0%,transparent 65%);
+                    pointer-events:none;"></div>
+
+        <div style="width:80px;height:3px;margin:0 auto 28px;border-radius:2px;
+                    background:linear-gradient(90deg,#C8956C,#D4A878,#C8956C);"></div>
+
+        <h2 style="color:#2C1F14;margin-bottom:18px;">总结</h2>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:88%;margin:0 auto 24px;">
+          <div class="arch-box fragment">
+            <div style="font-size:1.1em;font-weight:bold;color:#C8956C;margin-bottom:4px;">结论 A</div>
+            <div style="color:#5A4030;">结论描述占位文字</div>
+          </div>
+          <div class="arch-box fragment">
+            <div style="font-size:1.1em;font-weight:bold;color:#C8956C;margin-bottom:4px;">结论 B</div>
+            <div style="color:#5A4030;">结论描述占位文字</div>
+          </div>
+          <div class="arch-box fragment">
+            <div style="font-size:1.1em;font-weight:bold;color:#C8956C;margin-bottom:4px;">结论 C</div>
+            <div style="color:#5A4030;">结论描述占位文字</div>
+          </div>
+        </div>
+
+        <div style="width:340px;height:1px;margin:0 auto 20px;
+                    background:linear-gradient(90deg,transparent,rgba(200,149,108,0.50),transparent);"></div>
+
+        <p style="font-size:0.46em;color:#8B6A50;max-width:600px;margin:0 auto;line-height:1.9;">
+          后续工作方向 / 致谢 / 联系方式占位文字
+        </p>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="dist/reveal.js"></script>
+  <script src="dist/plugin/highlight.js"></script>
+  <script src="dist/plugin/math.js"></script>
+
+  <script>
+    Reveal.initialize({
+      hash: true,
+      overview: false,
+      slideNumber: 'c/t',
+      center: true,
+      transition: 'slide',
+      width: 1920,
+      height: 1080,
+      margin: 0.02,
+      keyboard: { 27: null, 79: null },
+      mathjax3: {
+        mathjax: 'lib/mathjax/es5/tex-mml-svg.js?v=svg2',
+        tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+        svg: { fontCache: 'global', scale: 1.0 }
+      },
+      plugins: [RevealHighlight, RevealMath.MathJax3()]
+    });
+
+    Reveal.on('slidechanged', function(event) {
+      var idx = event.indexh;
+      document.querySelectorAll('.floating-nav a[data-from]').forEach(function(link) {
+        var from = parseInt(link.dataset.from);
+        var to   = parseInt(link.dataset.to);
+        link.classList.toggle('active', idx >= from && idx <= to);
+      });
+    });
+
+    // ── 扇形地图模式（O 键触发，替代 Reveal 内置 overview）──
+    (function () {
+      var _fan = null;
+
+      function openFan() {
+        if (_fan) return;
+
+        var W  = window.innerWidth;
+        var H  = window.innerHeight;
+        var slides = Array.from(document.querySelectorAll('.reveal .slides > section'));
+        var N  = slides.length;
+        var cur = Reveal.getState().indexh;
+
+        var STEP   = 5;
+        var R      = Math.min(W * 0.58, H * 0.94);
+        var CX     = W / 2;
+        var CY     = H + R * 0.28;
+        var CW     = Math.min(W * 0.11, 210);
+        var CH     = CW * 9 / 16;
+        var SC     = CW / 1920;
+
+        var ov = document.createElement('div');
+        ov.id = 'fan-overview';
+        ov.style.cssText = [
+          'position:fixed', 'inset:0', 'z-index:5000', 'overflow:hidden',
+          'background:linear-gradient(135deg,#1C1209 0%,#2D1E10 55%,#181008 100%)',
+          'opacity:0', 'transition:opacity 0.30s ease', 'cursor:default'
+        ].join(';');
+
+        var lbl = document.createElement('div');
+        lbl.style.cssText = [
+          'position:absolute', 'top:20px', 'left:50%',
+          'transform:translateX(-50%)', 'z-index:1',
+          'background:rgba(28,18,9,0.90)', 'backdrop-filter:blur(14px)',
+          'border:1px solid rgba(200,149,108,0.38)', 'color:#E8C090',
+          'font-size:13px', 'padding:7px 22px', 'border-radius:30px',
+          'white-space:nowrap', 'pointer-events:none', 'letter-spacing:0.05em'
+        ].join(';');
+        lbl.innerHTML = '幻灯片地图 &nbsp;·&nbsp; 点击跳转 &nbsp;·&nbsp;'
+          + ' <kbd style="background:rgba(200,149,108,0.18);border:1px solid rgba(200,149,108,0.38);border-radius:4px;padding:1px 8px;">O</kbd>'
+          + ' / <kbd style="background:rgba(200,149,108,0.18);border:1px solid rgba(200,149,108,0.38);border-radius:4px;padding:1px 8px;">Esc</kbd> 退出';
+        ov.appendChild(lbl);
+
+        slides.forEach(function (sec, i) {
+          var angleDeg = -90 + (i - (N - 1) / 2) * STEP;
+          var angleRad = angleDeg * Math.PI / 180;
+          var cx = CX + R * Math.cos(angleRad);
+          var cy = CY + R * Math.sin(angleRad);
+          var rotDeg = (i - (N - 1) / 2) * STEP;
+          var isCur  = (i === cur);
+
+          var card = document.createElement('div');
+          card.style.cssText = [
+            'position:absolute',
+            'left:' + (cx - CW / 2) + 'px',
+            'top:'  + (cy - CH / 2) + 'px',
+            'width:'  + CW + 'px',
+            'height:' + CH + 'px',
+            'border-radius:7px', 'overflow:hidden', 'cursor:pointer',
+            'transform:rotate(' + rotDeg + 'deg)',
+            'transition:transform 0.18s ease,box-shadow 0.18s ease',
+            'background:#FAF8F4',
+            'box-shadow:' + (isCur
+              ? '0 0 0 3px #C8956C,0 14px 44px rgba(200,149,108,0.60)'
+              : '0 6px 26px rgba(0,0,0,0.70),0 0 0 1px rgba(200,149,108,0.22)')
+          ].join(';');
+
+          var bgGrad = sec.getAttribute('data-background-gradient');
+          if (bgGrad) card.style.background = bgGrad;
+
+          var inner = document.createElement('div');
+          inner.style.cssText = [
+            'position:absolute', 'top:0', 'left:0',
+            'width:1920px', 'height:1080px',
+            'transform:scale(' + SC + ')', 'transform-origin:0 0',
+            'pointer-events:none'
+          ].join(';');
+          var clone = sec.cloneNode(true);
+          clone.style.cssText = 'display:block;position:relative;width:1920px;height:1080px;overflow:hidden;';
+          clone.querySelectorAll('.fragment').forEach(function (f) {
+            f.style.opacity = '1'; f.style.visibility = 'visible';
+          });
+          inner.appendChild(clone);
+          card.appendChild(inner);
+
+          var badge = document.createElement('div');
+          badge.style.cssText = [
+            'position:absolute', 'bottom:5px', 'right:7px',
+            'background:rgba(20,12,6,0.75)', 'color:#C8956C',
+            'font-size:' + Math.round(CW * 0.065) + 'px', 'font-weight:bold',
+            'padding:2px 8px', 'border-radius:10px', 'z-index:2', 'pointer-events:none'
+          ].join(';');
+          badge.textContent = i + 1;
+          card.appendChild(badge);
+
+          var baseT  = 'rotate(' + rotDeg + 'deg)';
+          var hoverT = 'translateY(-22px) rotate(' + rotDeg + 'deg) scale(1.07)';
+          card.addEventListener('mouseenter', function () {
+            this.style.transform = hoverT;
+            this.style.boxShadow = '0 20px 52px rgba(200,149,108,0.48),0 0 0 2.5px rgba(200,149,108,0.75)';
+          });
+          card.addEventListener('mouseleave', function () {
+            this.style.transform = baseT;
+            this.style.boxShadow = isCur
+              ? '0 0 0 3px #C8956C,0 14px 44px rgba(200,149,108,0.60)'
+              : '0 6px 26px rgba(0,0,0,0.70),0 0 0 1px rgba(200,149,108,0.22)';
+          });
+          card.addEventListener('click', function (e) {
+            e.stopPropagation();
+            Reveal.slide(i);
+            closeFan();
+          });
+
+          ov.appendChild(card);
+        });
+
+        ov.addEventListener('click', function () { closeFan(); });
+        document.body.appendChild(ov);
+        _fan = ov;
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { ov.style.opacity = '1'; });
+        });
+      }
+
+      function closeFan() {
+        if (!_fan) return;
+        var ov = _fan; _fan = null;
+        ov.style.opacity = '0';
+        setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 320);
+      }
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'o' || e.key === 'O') { _fan ? closeFan() : openFan(); e.preventDefault(); }
+        if (e.key === 'Escape' && _fan)     { closeFan(); e.preventDefault(); }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,2001 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TA-Transformer 架构汇报</title>
+  <link rel="stylesheet" href="dist/reset.css">
+  <link rel="stylesheet" href="dist/reveal.css">
+  <link rel="stylesheet" href="dist/theme/white.css">
+  <link rel="stylesheet" href="dist/plugin/highlight/monokai.css">
+
+  <!-- ══ 字体加载（全部本地 font/）══ -->
+  <style>
+    /* Inter — 西文正文（备用） */
+    @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap; src: url('font/inter/Inter-Regular.woff2') format('woff2'); }
+    @font-face { font-family: 'Inter'; font-style: normal; font-weight: 500; font-display: swap; src: url('font/inter/Inter-Medium.woff2') format('woff2'); }
+    @font-face { font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap; src: url('font/inter/Inter-SemiBold.woff2') format('woff2'); }
+    @font-face { font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap; src: url('font/inter/Inter-Bold.woff2') format('woff2'); }
+
+    /* Comic Neue — 西文正文 */
+    @font-face { font-family: 'Comic Neue'; font-style: normal; font-weight: 300; font-display: swap; src: url('font/comic-neue/ComicNeue-Light.woff2') format('woff2'); }
+    @font-face { font-family: 'Comic Neue'; font-style: normal; font-weight: 400; font-display: swap; src: url('font/comic-neue/ComicNeue-Regular.woff2') format('woff2'); }
+    @font-face { font-family: 'Comic Neue'; font-style: normal; font-weight: 500; font-display: swap; src: url('font/comic-neue/ComicNeue-Regular.woff2') format('woff2'); }
+    @font-face { font-family: 'Comic Neue'; font-style: normal; font-weight: 600; font-display: swap; src: url('font/comic-neue/ComicNeue-Bold.woff2') format('woff2'); }
+    @font-face { font-family: 'Comic Neue'; font-style: normal; font-weight: 700; font-display: swap; src: url('font/comic-neue/ComicNeue-Bold.woff2') format('woff2'); }
+    @font-face { font-family: 'Comic Neue'; font-style: italic; font-weight: 400; font-display: swap; src: url('font/comic-neue/ComicNeue-Italic.woff2') format('woff2'); }
+    @font-face { font-family: 'Comic Neue'; font-style: italic; font-weight: 700; font-display: swap; src: url('font/comic-neue/ComicNeue-BoldItalic.woff2') format('woff2'); }
+
+    /* JetBrains Mono — 代码 */
+    @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('font/jetbrains-mono/JetBrainsMono-Regular.woff2') format('woff2'); }
+    @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 500; font-display: swap; src: url('font/jetbrains-mono/JetBrainsMono-Medium.woff2') format('woff2'); }
+
+    /* Noto Sans SC — 中文正文 / 标题 */
+    @font-face { font-family: 'Noto Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('font/noto-sans-sc/NotoSansSC-Regular.woff2') format('woff2'); }
+    @font-face { font-family: 'Noto Sans SC'; font-style: normal; font-weight: 500; font-display: swap; src: url('font/noto-sans-sc/NotoSansSC-Medium.woff2') format('woff2'); }
+    @font-face { font-family: 'Noto Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('font/noto-sans-sc/NotoSansSC-Bold.woff2') format('woff2'); }
+  </style>
+  <style>
+    /* ══ Claude 米色系配色变量 ══
+       主背景  #FAF8F4  暖米白
+       卡片底  #F5EFE6  暖奶油
+       铜橙强调  #C8956C / 深 #8B5E3C
+       赤陶辅色  #B85450
+       鼠尾草辅色  #4F8B68
+       边框    #E0D5C5  暖米边
+       灰文字  #9A8878
+    */
+
+    /* 全局背景覆盖 white 主题 */
+    body, .reveal { background: #FAF8F4 !important; }
+    /* 覆盖 white 主题的 --r-heading-text-transform:uppercase */
+    :root { --r-heading-text-transform: none; }
+
+    /* ── 全局字号放大（white 主题默认 ~40px，调到 56px ≈ +40%）── */
+    .reveal { font-size: 56px; }
+    .reveal h1 { font-size: 2.0em; }
+    .reveal h2 { font-size: 1.55em; }
+    .reveal h3 { font-size: 1.25em; }
+
+    /* ── 字体变量 ── */
+    :root {
+      --font-zh: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --font-en: "Comic Neue", "Inter", -apple-system, "Helvetica Neue", Arial, sans-serif;
+      --font-display: "Comic Neue", "Inter", -apple-system, sans-serif;
+      --font-mono: "JetBrains Mono", "SF Mono", Consolas, Menlo, monospace;
+    }
+
+    /* ── 全局字体应用：西文 Inter + 中文阿里普惠体 ── */
+    body, .reveal, .reveal section, .reveal p, .reveal li, .reveal td, .reveal div, .reveal span {
+      font-family: var(--font-en), var(--font-zh);
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+    }
+    /* h1 用 Cal Sans 展示体；h2–h4 用 Inter（Cal Sans 无小写字形，会全大写） */
+    .reveal h1 {
+      font-family: var(--font-display), var(--font-zh);
+      font-weight: 700;
+      letter-spacing: -0.005em;
+    }
+    .reveal h2, .reveal h3, .reveal h4 {
+      font-family: var(--font-en), var(--font-zh);
+      font-weight: 700;
+      letter-spacing: -0.005em;
+    }
+    /* strong 用 Inter SemiBold + Noto Sans SC Medium */
+    .reveal strong, .reveal b {
+      font-family: var(--font-en), var(--font-zh);
+      font-weight: 600;
+    }
+    /* 代码 monospace */
+    .reveal code, .reveal pre {
+      font-family: var(--font-mono);
+      font-feature-settings: "calt", "ss01";
+    }
+    /* 浮动导航 */
+    .floating-nav, .floating-nav a {
+      font-family: var(--font-en), var(--font-zh);
+    }
+
+    /* ── 抗模糊：给缩放后的文本加渲染 hint ── */
+    body, .reveal, .reveal section {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* ── 文本平衡：自动避免末行只剩 1-2 个字的"孤儿"现象 ── */
+    .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+      text-wrap: balance;
+    }
+    .reveal p, .reveal li, .reveal td {
+      text-wrap: pretty;          /* 段落用 pretty：只优化最后几行，保留正常段落速度 */
+    }
+    /* 卡片 / 强调框里的短文本——多为说明性短句，全部 balance 让两行匀称 */
+    .reveal section > div div,
+    .reveal .arch-box,
+    .reveal .pipe-step,
+    .reveal .eq-row .c-dim {
+      text-wrap: balance;
+    }
+    /* MathJax SVG 输出锐化 */
+    .reveal mjx-container[jax="SVG"] svg { shape-rendering: geometricPrecision; }
+    /* fragment 合成层锐化：防止 opacity 动画创建低分辨率光栅层 */
+    .reveal .eq-row.fragment {
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+    }
+    /* 禁用 3D 合成，避免 transform: scale 后的文本二次光栅化模糊 */
+    .reveal .slides,
+    .reveal .slides section {
+      transform-style: flat !important;
+      backface-visibility: hidden;
+    }
+
+    /* ── 浮动导航 ── */
+    .floating-nav {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex;
+      gap: 4px;
+      background: rgba(28,18,9,0.88);
+      backdrop-filter: blur(12px);
+      padding: 7px 14px;
+      border-radius: 40px;
+      font-family: var(--font-en), var(--font-zh);
+      border: 1px solid rgba(200,149,108,0.20);
+    }
+    .floating-nav a {
+      color: #B8A090;
+      text-decoration: none;
+      padding: 4px 11px;
+      border-radius: 20px;
+      font-size: 14px;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .floating-nav a:hover  { color: #FAF0E0; background: rgba(200,149,108,0.18); }
+    .floating-nav a.active { color: #FAF0E0; background: rgba(200,149,108,0.38); }
+    .floating-nav a em { font-style: normal; font-size: 0.76em; opacity: 0.50; margin-left: 3px; }
+    .nav-sep { color: rgba(200,149,108,0.35); padding: 0 3px; font-size: 13px; align-self: center; }
+
+    /* ── 架构卡片 ── */
+    .arch-box {
+      background: #F5EFE6;
+      border: 2px solid #C8956C;
+      border-radius: 8px;
+      padding: 9px 16px;
+      text-align: center;
+      font-size: 0.6em;
+    }
+    .arch-arrow { text-align: center; color: #9A8878; font-size: 0.65em; margin: 2px 0; }
+    .stat-badge {
+      display: inline-block;
+      background: #F5EFE6;
+      border: 1px solid #E0D5C5;
+      border-radius: 20px;
+      padding: 3px 14px;
+      font-size: 0.55em;
+      font-weight: bold;
+      color: #8B5E3C;
+      margin: 3px;
+    }
+
+    /* ── 辅助文字 ── */
+    .c-dim { color: #9A8878; font-size: 0.92em; font-weight: 400; }
+
+    /* ── 公式步骤行 ── */
+    .eq-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #F7F2EA;
+      border-left: 4px solid #C8956C;
+      border-radius: 0 8px 8px 0;
+      padding: 7px 14px;
+      margin: 6px 0;
+      font-size: 0.68em;
+    }
+    .eq-row .label {
+      min-width: 78px;
+      font-weight: bold;
+      color: #C8956C;
+      font-size: 0.94em;
+    }
+    .eq-row .c-dim { font-size: 0.94em; color: #7A6055; }
+    /* 公式左对齐（覆盖 MathJax 默认 display=block 居中） */
+    .eq-row mjx-container[display="true"] {
+      margin: 0 !important;
+      text-align: left !important;
+    }
+    .eq-row mjx-container { text-align: left; }
+
+    /* ── 终端风格代码框 ── */
+    .code-theater {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 14px 48px rgba(28,18,9,0.35), 0 0 0 1px rgba(200,149,108,0.12);
+      margin: 0 auto;
+    }
+    .theater-bar {
+      background: #2A1E14;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dot   { width: 13px; height: 13px; border-radius: 50%; display: inline-block; }
+    .d-r   { background: #ff5f57; }
+    .d-y   { background: #febc2e; }
+    .d-g   { background: #28c840; }
+    .theater-fname {
+      color: #9A7A62;
+      font-size: 0.45em;
+      font-family: var(--font-mono);
+      margin-left: 10px;
+    }
+    /* 把上下 padding 移到外壳上，避免 scrollTop 动画时露出 padding 黑边 */
+    .code-theater {
+      padding-bottom: 28px;
+      background: #272822;
+    }
+    .code-theater .theater-bar {
+      margin-bottom: 28px;
+    }
+    .code-theater pre {
+      margin: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      background: #272822 !important;
+      max-height: none !important;
+      height: auto !important;
+      overflow: hidden !important;
+    }
+    .code-theater pre code {
+      font-size: 0.66em !important;
+      line-height: 1.5 !important;
+      max-height: none !important;
+      height: auto !important;
+      overflow: hidden !important;
+      white-space: pre !important;
+    }
+    /* Reveal 默认 .reveal pre 给了 max-height 70vh —— 全部移除 */
+    .code-theater, .code-theater * { max-height: none !important; }
+
+    /* ── 注释气泡 ── */
+    .ann {
+      display: inline-block;
+      background: rgba(200,149,108,0.14);
+      border: 1px solid rgba(200,149,108,0.40);
+      border-radius: 6px;
+      padding: 2px 10px;
+      font-size: 0.85em;
+      color: #8B5E3C;
+      margin: 2px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+    .ann.r { background: rgba(184,84,80,0.10); border-color: rgba(184,84,80,0.35); color: #B85450; }
+    .ann.g { background: rgba(79,139,104,0.10); border-color: rgba(79,139,104,0.35); color: #4F8B68; }
+
+    /* ── 图层标签 ── */
+    .layer-label {
+      font-size: 0.48em;
+      font-weight: bold;
+      color: #6B6055;
+      text-align: center;
+      margin-bottom: 2px;
+    }
+
+    /* ── 管线流程图 ── */
+    .pipeline {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      width: 96%;
+      margin: 12px auto 0;
+    }
+    .pipe-step {
+      flex: 1;
+      background: #F5EFE6;
+      border: 1.5px solid #E0D5C5;
+      border-radius: 8px;
+      padding: 10px 6px 8px;
+      text-align: center;
+      position: relative;
+    }
+    .pipe-step .ps-num {
+      position: absolute;
+      top: -11px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #C8956C;
+      color: #fff;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 0.45em;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pipe-step .ps-title { font-weight: bold; color: #8B5E3C; font-size: 0.52em; margin-top: 4px; }
+    .pipe-step .ps-sub   { color: #8A7868; font-size: 0.48em; margin-top: 3px; line-height: 1.4; }
+    .pipe-arrow { align-self: center; color: #C8B09A; font-size: 0.65em; padding: 0 3px; flex-shrink: 0; }
+
+    /* ── 代码 + 侧注 布局 ── */
+    .code-split { display: flex; gap: 12px; align-items: stretch; width: 100%; margin: 0 auto; }
+    .code-split-left  { flex: 4; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+    .code-split-right { flex: 1; min-width: 150px; max-width: 280px; display: flex; flex-direction: column; gap: 8px; padding-top: 46px; }
+    .code-split-left .code-theater { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .code-split-left .code-theater pre { flex: 1; overflow: hidden !important; }
+    .code-split-left .code-theater pre code { overflow: hidden !important; white-space: pre; }
+    .code-split-left .code-theater pre code { font-size: 0.88em !important; }
+    .ann-card {
+      background: #F7F2EA;
+      border-left: 3px solid #C8956C;
+      border-radius: 0 8px 8px 0;
+      padding: 9px 14px;
+      font-size: 0.58em;
+      color: #3A2C24;
+      line-height: 1.5;
+    }
+    .ann-card strong { color: #8B5E3C; }
+    .ann-card.r { border-color: #B85450; }
+    .ann-card.r strong { color: #B85450; }
+    .ann-card.g { border-color: #4F8B68; }
+    .ann-card.g strong { color: #4F8B68; }
+    .ann-card code { font-size: 0.9em; background: rgba(60,40,20,0.07); padding: 1px 5px; border-radius: 3px; }
+
+    /* ══ 扇形地图模式 — 样式由 JS 内联注入 ══ */
+    #fan-overview { font-family: var(--font-en), var(--font-zh); }
+  </style>
+</head>
+<body>
+
+  <div class="floating-nav" id="floatingNav">
+    <a href="#/0" data-from="0" data-to="0">封面</a>
+    <span class="nav-sep">·</span>
+    <a href="#/1" data-from="1" data-to="5">背景 <em>2–6</em></a>
+    <a href="#/6" data-from="6" data-to="8">方法 <em>7–9</em></a>
+    <a href="#/9" data-from="9" data-to="13">架构 <em>10–14</em></a>
+    <a href="#/14" data-from="14" data-to="19">结果 <em>15–20</em></a>
+    <span class="nav-sep">·</span>
+    <a href="#/20" data-from="20" data-to="20">总结 <em>21</em></a>
+    <a href="#/21" data-from="21" data-to="21">进化 <em>22</em></a>
+    <a href="#/22" data-from="22" data-to="22">路线图 <em>23</em></a>
+    <a href="#/23" data-from="23" data-to="23">附录 <em>24</em></a>
+  </div>
+
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- ══ Slide 0: 封面 ══ -->
+      <section data-background-gradient="linear-gradient(150deg,#FAF7F0 0%,#F2E8D8 55%,#EDE0CA 100%)">
+
+        <!-- 左上角暖光晕 -->
+        <div style="position:absolute;top:-10%;left:-8%;width:50%;height:55%;
+                    background:radial-gradient(circle,rgba(200,149,108,0.12) 0%,transparent 65%);
+                    pointer-events:none;"></div>
+        <!-- 右下角暖光晕 -->
+        <div style="position:absolute;bottom:-8%;right:-6%;width:38%;height:44%;
+                    background:radial-gradient(circle,rgba(180,120,70,0.09) 0%,transparent 65%);
+                    pointer-events:none;"></div>
+
+        <!-- 顶部装饰线 -->
+        <div style="width:80px;height:3px;margin:0 auto 36px;border-radius:2px;
+                    background:linear-gradient(90deg,#C8956C,#D4A878,#C8956C);"></div>
+
+        <!-- 主标题 -->
+        <div style="font-size:2.8em;font-weight:800;color:#2C1F14;
+                    line-height:1.15;letter-spacing:-0.015em;margin-bottom:10px;">
+          TA-Transformer
+        </div>
+        <div style="font-size:1.5em;font-weight:700;color:#C8956C;
+                    letter-spacing:0.28em;text-transform:uppercase;margin-bottom:26px;">
+          架构剖析
+        </div>
+
+        <!-- 副标题 -->
+        <p style="font-size:0.72em;color:#6B5040;margin:0 auto 30px;
+                  max-width:680px;line-height:1.7;font-weight:600;">
+          用 Transformer 解析瞬态吸收光谱的激发态动力学
+        </p>
+
+        <!-- 横向分隔渐变线 -->
+        <div style="width:340px;height:1px;margin:0 auto 26px;
+                    background:linear-gradient(90deg,transparent,rgba(200,149,108,0.50),transparent);"></div>
+
+        <!-- 作者信息 -->
+        <div style="display:flex;justify-content:center;align-items:center;gap:28px;font-size:0.54em;font-weight:700;color:#8B5E3C;letter-spacing:0.03em;margin-bottom:14px;">
+          <span>汇报人 &nbsp;邓宏健</span>
+          <span style="color:rgba(200,149,108,0.45);font-weight:300;">|</span>
+          <span style="font-weight:500;color:#A07050;">2026-05-19</span>
+        </div>
+
+        <!-- 简介 -->
+        <p style="font-size:0.36em;color:rgba(154,112,88,0.65);margin:28px auto 0;max-width:540px;line-height:2.0;font-weight:400;">
+          多任务 Transformer，一次前向传播<br>
+          同时输出物种数、寿命、谱图与反应拓扑
+        </p>
+      </section>
+
+      <!-- ══ Slide 1: AI 术语速查 ══ -->
+      <section>
+        <h2 style="margin-bottom:6px;">背景知识：AI 核心术语速览</h2>
+        <p style="font-size:0.50em;color:#9A8878;margin:0 0 12px 0;">
+          以下术语将在报告中频繁出现，此处以直观方式简要说明其含义
+        </p>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;width:96%;margin:0 auto;">
+
+          <div style="background:#F5EFE6;border-left:4px solid #C8956C;border-radius:0 8px 8px 0;padding:10px 14px;">
+            <div style="font-size:0.58em;font-weight:bold;color:#8B5E3C;">模型 &nbsp;<span style="font-size:0.78em;color:#9A8878;font-weight:normal;">Model</span></div>
+            <div style="font-size:0.46em;color:#5A4030;line-height:1.6;margin-top:4px;">
+              经过大量数据训练后的"<strong>数学函数</strong>"。给它输入数据，它输出预测结果。<em>本次演示的 Transformer 就是一个模型。</em>
+            </div>
+          </div>
+
+          <div style="background:#F5EFE6;border-left:4px solid #C8956C;border-radius:0 8px 8px 0;padding:10px 14px;">
+            <div style="font-size:0.58em;font-weight:bold;color:#8B5E3C;">训练 &nbsp;<span style="font-size:0.78em;color:#9A8878;font-weight:normal;">Training</span></div>
+            <div style="font-size:0.46em;color:#5A4030;line-height:1.6;margin-top:4px;">
+              让模型<strong>反复看数据、对答案、改错</strong>的循环过程，<em>相当于刷题备考</em>。本项目在 H200 GPU 上训练约 <strong>2–3 小时</strong>。
+            </div>
+          </div>
+
+          <div style="background:#F5EFE6;border-left:4px solid #C8956C;border-radius:0 8px 8px 0;padding:10px 14px;">
+            <div style="font-size:0.58em;font-weight:bold;color:#8B5E3C;">神经网络 &nbsp;<span style="font-size:0.78em;color:#9A8878;font-weight:normal;">Neural Network</span></div>
+            <div style="font-size:0.46em;color:#5A4030;line-height:1.6;margin-top:4px;">
+              受大脑神经元启发的计算结构，由多层"<strong>权重矩阵</strong>"堆叠而成。<em>Transformer 是神经网络的一种。</em>
+            </div>
+          </div>
+
+          <div style="background:#EEF5EC;border-left:4px solid #4F8B68;border-radius:0 8px 8px 0;padding:10px 14px;">
+            <div style="font-size:0.58em;font-weight:bold;color:#2A5040;">注意力机制 &nbsp;<span style="font-size:0.78em;color:#9A8878;font-weight:normal;">Attention</span></div>
+            <div style="font-size:0.46em;color:#3A4A38;line-height:1.6;margin-top:4px;">
+              模型处理每个位置时，动态决定"<strong>重点看哪里</strong>"。<em>读一句话时人眼会聚焦关键词</em>，Attention 就是这个过程的数学实现。
+            </div>
+          </div>
+
+          <div style="background:#EEF5EC;border-left:4px solid #4F8B68;border-radius:0 8px 8px 0;padding:10px 14px;">
+            <div style="font-size:0.58em;font-weight:bold;color:#2A5040;">Token &nbsp;<span style="font-size:0.78em;color:#9A8878;font-weight:normal;">Token</span></div>
+            <div style="font-size:0.46em;color:#3A4A38;line-height:1.6;margin-top:4px;">
+              序列被切分后的<strong>最小处理单元</strong>。<em>文本里是词/字</em>，本项目里是光谱图切出的小 patch（<strong>15×10 = 150 个</strong>）。
+            </div>
+          </div>
+
+          <div style="background:#EEF5EC;border-left:4px solid #4F8B68;border-radius:0 8px 8px 0;padding:10px 14px;">
+            <div style="font-size:0.58em;font-weight:bold;color:#2A5040;">参数 &nbsp;<span style="font-size:0.78em;color:#9A8878;font-weight:normal;">Parameters</span></div>
+            <div style="font-size:0.46em;color:#3A4A38;line-height:1.6;margin-top:4px;">
+              模型内部<strong>可学习的数值</strong>，训练过程就是调整这些数值。GPT-4 约 <strong>1.8 万亿个</strong>；本模型 <strong>3800 万个</strong>。
+            </div>
+          </div>
+
+          <div style="background:#FFF2EE;border-left:4px solid #B85450;border-radius:0 8px 8px 0;padding:10px 14px;">
+            <div style="font-size:0.58em;font-weight:bold;color:#7A2020;">损失函数 &nbsp;<span style="font-size:0.78em;color:#9A8878;font-weight:normal;">Loss</span></div>
+            <div style="font-size:0.46em;color:#5A3030;line-height:1.6;margin-top:4px;">
+              衡量<strong>预测与真实值差距</strong>的数字。训练目标就是让它不断<strong>接近 0</strong>。<em>Loss 降得越快，训练越顺利。</em>
+            </div>
+          </div>
+
+          <div style="background:#FFF2EE;border-left:4px solid #B85450;border-radius:0 8px 8px 0;padding:10px 14px;">
+            <div style="font-size:0.58em;font-weight:bold;color:#7A2020;">轮次 &nbsp;<span style="font-size:0.78em;color:#9A8878;font-weight:normal;">Epoch</span></div>
+            <div style="font-size:0.46em;color:#5A3030;line-height:1.6;margin-top:4px;">
+              模型把全部训练数据<strong>看完一遍</strong>算一个 epoch。本项目训练 <strong>300 个 epoch</strong>，<em>相当于把 10 万条数据看了 300 遍</em>。
+            </div>
+          </div>
+
+          <div style="background:#FFF2EE;border-left:4px solid #B85450;border-radius:0 8px 8px 0;padding:10px 14px;">
+            <div style="font-size:0.58em;font-weight:bold;color:#7A2020;">过拟合 &nbsp;<span style="font-size:0.78em;color:#9A8878;font-weight:normal;">Overfitting</span></div>
+            <div style="font-size:0.46em;color:#5A3030;line-height:1.6;margin-top:4px;">
+              模型把训练数据"<strong>背下来</strong>"，但遇到新数据就<strong>失效</strong>。<em>类似只背真题、不理解原理，换一题就不会了。</em>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:10px;font-size:0.40em;color:#9A8878;text-align:center;">
+          术语颜色：<span style="color:#8B5E3C;">■ 基本概念</span> &nbsp;·&nbsp; <span style="color:#2A5040;">■ Transformer 核心</span> &nbsp;·&nbsp; <span style="color:#7A2020;">■ 训练相关</span>
+        </div>
+      </section>
+
+      <!-- ══ Slide 2: Transformer 背景介绍 ══ -->
+      <section>
+        <h2 style="margin-bottom:12px;">Transformer：从序列到注意力</h2>
+
+        <!-- 演进时间线 -->
+        <div style="display:flex;align-items:stretch;justify-content:center;gap:0;margin-bottom:14px;width:92%;margin-left:auto;margin-right:auto;">
+          <div style="flex:1;background:#F5EFE6;border:1.5px solid #E0D5C5;border-radius:8px;padding:10px 14px;text-align:center;">
+            <div style="font-size:0.45em;font-weight:bold;color:#9A8878;margin-bottom:2px;">1990s</div>
+            <div style="font-size:0.52em;font-weight:bold;color:#6B6055;">RNN / LSTM</div>
+            <div style="font-size:0.44em;color:#9A8878;margin-top:4px;line-height:1.4;">顺序逐步计算<br>长程依赖随距离衰减</div>
+          </div>
+          <div style="align-self:center;color:#C8B09A;font-size:0.65em;padding:0 6px;">→</div>
+          <div style="flex:1;background:#F5EFE6;border:1.5px solid #E0D5C5;border-radius:8px;padding:10px 14px;text-align:center;">
+            <div style="font-size:0.45em;font-weight:bold;color:#9A8878;margin-bottom:2px;">2015</div>
+            <div style="font-size:0.52em;font-weight:bold;color:#6B6055;">Attention Mechanism</div>
+            <div style="font-size:0.44em;color:#9A8878;margin-top:4px;line-height:1.4;">让模型懂得"重点看"关键词<br>但仍需一步步顺序处理</div>
+          </div>
+          <div style="align-self:center;color:#C8B09A;font-size:0.65em;padding:0 6px;">→</div>
+          <div style="flex:1;background:#F0E8D8;border:2px solid #C8956C;border-radius:8px;padding:10px 14px;text-align:center;">
+            <div style="font-size:0.45em;font-weight:bold;color:#8B5E3C;margin-bottom:2px;">2017 · Vaswani et al.</div>
+            <div style="font-size:0.52em;font-weight:bold;color:#8B5E3C;">Transformer</div>
+            <div style="font-size:0.44em;color:#6B5040;margin-top:4px;line-height:1.4;"><em>Attention Is All You Need</em><br>纯注意力，完全并行</div>
+          </div>
+          <div style="align-self:center;color:#C8B09A;font-size:0.65em;padding:0 6px;">→</div>
+          <div style="flex:1;background:#F5EFE6;border:1.5px solid #C8956C;border-radius:8px;padding:10px 14px;text-align:center;">
+            <div style="font-size:0.45em;font-weight:bold;color:#8B5E3C;margin-bottom:2px;">2018 – 今</div>
+            <div style="font-size:0.52em;font-weight:bold;color:#6B6055;">BERT / GPT / ViT…</div>
+            <div style="font-size:0.44em;color:#9A8878;margin-top:4px;line-height:1.4;">先学海量通用知识<br>再针对各种任务微调</div>
+          </div>
+        </div>
+
+        <!-- 核心公式 -->
+        <div class="eq-row" style="margin-bottom:12px;">
+          <div class="label">核心公式</div>
+          <div>
+            \[\text{Attention}(Q,K,V)=\text{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}}\right)V\]
+            <span class="c-dim">Q 问"我在找什么"，K 说"我能提供什么"，V 是实际内容；除以 \(\sqrt{d_k}\) 防止数值过大、计算不稳定</span>
+          </div>
+        </div>
+
+        <!-- 三大优势 -->
+        <div style="display:flex;gap:10px;">
+          <div style="flex:1;background:#F7F2EA;border-left:3px solid #C8956C;border-radius:0 8px 8px 0;padding:10px 16px;font-size:0.55em;color:#3A2C24;">
+            <strong style="color:#8B5E3C;">① 任意两个位置可以直接对话</strong><br>
+            不管距离多远，都能直接建立联系，信息不会随距离衰减
+          </div>
+          <div style="flex:1;background:#F7F2EA;border-left:3px solid #B85450;border-radius:0 8px 8px 0;padding:10px 16px;font-size:0.55em;color:#3A2C24;">
+            <strong style="color:#B85450;">② 完全并行计算</strong><br>
+            所有位置同时并行处理，不需要一个接一个地排队等待
+          </div>
+          <div style="flex:1;background:#F7F2EA;border-left:3px solid #4F8B68;border-radius:0 8px 8px 0;padding:10px 16px;font-size:0.55em;color:#3A2C24;">
+            <strong style="color:#4F8B68;">③ 多头多视角</strong><br>
+            多个"注意力头"从不同角度看同一份输入
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ Slide 2: Transformer 应用简介 ══ -->
+      <section>
+        <h2 style="margin-bottom:10px;">Transformer 现在能做什么？</h2>
+        <p style="font-size:0.58em;color:#6B6055;margin:0 0 16px 0;">
+          同一套思想，已被用到你身边几乎所有"AI"产品里
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;width:94%;margin:0 auto;">
+
+          <!-- ChatGPT / 对话 -->
+          <div style="background:#F5EFE6;border:1.5px solid #E0D5C5;border-radius:10px;padding:16px 14px;text-align:center;">
+            <div style="font-size:1.6em;margin-bottom:6px;">💬</div>
+            <div style="font-size:0.52em;font-weight:bold;color:#8B5E3C;margin-bottom:4px;">ChatGPT / AI 对话</div>
+            <div style="font-size:0.44em;color:#6B6055;line-height:1.5;">读懂你说的话，给出连贯的回答——GPT、Claude 都用了 Transformer</div>
+          </div>
+
+          <!-- 图片理解 -->
+          <div style="background:#F5EFE6;border:1.5px solid #E0D5C5;border-radius:10px;padding:16px 14px;text-align:center;">
+            <div style="font-size:1.6em;margin-bottom:6px;">🖼️</div>
+            <div style="font-size:0.52em;font-weight:bold;color:#8B5E3C;margin-bottom:4px;">图片理解 / 生成</div>
+            <div style="font-size:0.44em;color:#6B6055;line-height:1.5;">把图片切成小块，就像读单词一样去理解图像内容（ViT、DALL·E）</div>
+          </div>
+
+          <!-- AlphaFold -->
+          <div style="background:#F5EFE6;border:1.5px solid #E0D5C5;border-radius:10px;padding:16px 14px;text-align:center;">
+            <div style="font-size:1.6em;margin-bottom:6px;">🧬</div>
+            <div style="font-size:0.52em;font-weight:bold;color:#8B5E3C;margin-bottom:4px;">蛋白质结构预测</div>
+            <div style="font-size:0.44em;color:#6B6055;line-height:1.5;">AlphaFold 2 用 Transformer 解读氨基酸序列，预测蛋白质三维折叠形状</div>
+          </div>
+
+          <!-- GitHub Copilot -->
+          <div style="background:#F5EFE6;border:1.5px solid #E0D5C5;border-radius:10px;padding:16px 14px;text-align:center;">
+            <div style="font-size:1.6em;margin-bottom:6px;">💻</div>
+            <div style="font-size:0.52em;font-weight:bold;color:#8B5E3C;margin-bottom:4px;">代码自动补全</div>
+            <div style="font-size:0.44em;color:#6B6055;line-height:1.5;">GitHub Copilot 看你写了什么代码，自动猜出你接下来要写的内容</div>
+          </div>
+
+          <!-- 语音识别 -->
+          <div style="background:#F5EFE6;border:1.5px solid #E0D5C5;border-radius:10px;padding:16px 14px;text-align:center;">
+            <div style="font-size:1.6em;margin-bottom:6px;">🎙️</div>
+            <div style="font-size:0.52em;font-weight:bold;color:#8B5E3C;margin-bottom:4px;">语音识别 / 翻译</div>
+            <div style="font-size:0.44em;color:#6B6055;line-height:1.5;">Whisper 等模型把声音转成文字，再翻译成别的语言，实时准确</div>
+          </div>
+
+          <!-- TA-Transformer -->
+          <div style="background:#F0E8D8;border:2px solid #C8956C;border-radius:10px;padding:16px 14px;text-align:center;">
+            <div style="font-size:1.6em;margin-bottom:6px;">🔬</div>
+            <div style="font-size:0.52em;font-weight:bold;color:#8B5E3C;margin-bottom:4px;">科学数据分析 ← 今天</div>
+            <div style="font-size:0.44em;color:#6B5040;line-height:1.5;">我们的 TA-Transformer：读懂激光打到材料上的光谱信号，提取反应机制</div>
+          </div>
+
+        </div>
+
+        <p style="font-size:0.44em;color:#9A8878;margin:14px 0 0 0;text-align:center;">
+          核心思想：<strong style="color:#C8956C;">把任何序列或网格数据，都当成"互相关注"的元素集合来处理</strong>
+        </p>
+      </section>
+
+      <!-- ══ Slide 3: 任务背景 ══ -->
+      <section>
+        <h2 style="margin-bottom:8px;">任务：瞬态吸收（TA）光谱解析</h2>
+        <p style="font-size:0.6em;color:#6B6055;margin:0 0 8px 0;">
+          脉冲激光泵浦后测量 ΔA(λ, t)：差分吸收随<strong>波长</strong>与<strong>时间</strong>的演化，编码了激发态物种组成与动力学信息
+        </p>
+        <img src="attention_viz/input_spectrum.png"
+             style="max-height:40vh;max-width:62%;display:block;margin:0 auto 10px;border-radius:6px;">
+        <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;width:72%;margin:0 auto;">
+          <div class="arch-box" style="flex:1;min-width:130px;">
+            <div style="font-weight:bold;color:#8B5E3C;margin-bottom:4px;">输入</div>
+            ΔA 矩阵 (λ × t)<br>
+            <span class="c-dim">150 波长 × 100 时间点</span>
+          </div>
+          <div class="arch-arrow" style="align-self:center;">→</div>
+          <div class="arch-box" style="flex:1;min-width:130px;">
+            <div style="font-weight:bold;color:#8B5E3C;margin-bottom:4px;">分块</div>
+            10×10 = 100 patches<br>
+            <span class="c-dim">+ 1 CLS token</span>
+          </div>
+          <div class="arch-arrow" style="align-self:center;">→</div>
+          <div class="arch-box" style="flex:1;min-width:130px;">
+            <div style="font-weight:bold;color:#8B5E3C;margin-bottom:4px;">目标</div>
+            激发态种类识别<br>
+            <span class="c-dim">激发态数量 + 寿命拟合</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ Slide 2: 物理驱动合成数据生成 ══ -->
+      <section>
+        <h2 style="margin-bottom:6px;">物理驱动的合成数据生成</h2>
+        <p style="font-size:0.6em;color:#6B6055;margin:0 0 6px 0;">
+          训练集完全由基于物理的模拟器生成——无需真实实验数据；每条样本都携带精确的物理标签
+        </p>
+
+        <div class="eq-row">
+          <div class="label">ΔA 信号</div>
+          <div>\[
+            \Delta A(\lambda,\, t)
+            = \sum_{i=1}^{N}
+              \underbrace{\bigl[\sigma_i^{\text{ESA}}(\lambda) - \sigma_i^{\text{GSB}}(\lambda)\bigr]}_{\text{光谱形状（与时间无关）}}
+              \cdot
+              \underbrace{n_i(t)}_{\text{浓度动力学}}
+          \]</div>
+        </div>
+
+        <div class="eq-row" style="border-color:#B85450;">
+          <div class="label" style="color:#B85450;">光谱形状</div>
+          <div>
+            \[\sigma_i(\lambda) = A_i \exp\!\left(-\frac{(\tilde\lambda - \lambda_i^0)^2}{2w_i^2}\right),
+              \quad \tilde\lambda - \lambda_i^0 = (\lambda-\lambda_i^0)\cdot(1\pm\alpha),
+              \quad \alpha\in[-0.3,\,0.3]\]
+            <span class="c-dim">非对称 Gaussian；ESA（激发态吸收）为正，GSB（基态漂白）为负</span>
+          </div>
+        </div>
+
+        <div class="eq-row" style="border-color:#4F8B68;">
+          <div class="label" style="color:#4F8B68;">浓度动力学</div>
+          <div>
+            \[\frac{d\mathbf{n}}{dt} = K^{\!\top}\mathbf{n},\quad
+              K_{ii}=-\!\sum_{j\neq i}k_{ij},\quad
+              \mathbf{n}(0):\ n_A\ge 0.96\]
+            <span class="c-dim">LSODA 求解 ODE；速率按能级分三档：
+              τ<sub>A</sub>∈[0.5, 10] ps &nbsp;·&nbsp;
+              τ<sub>B</sub>∈[12, 200] ps &nbsp;·&nbsp;
+              τ<sub>C</sub>∈[25, 1000] ps</span>
+          </div>
+        </div>
+
+        <div class="pipeline fragment">
+          <div class="pipe-step">
+            <div class="ps-num">1</div>
+            <div class="ps-title">查询拓扑库</div>
+            <div class="ps-sub">预枚举 DAG<br>A→B→G 等结构</div>
+          </div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step">
+            <div class="ps-num">2</div>
+            <div class="ps-title">生成光谱</div>
+            <div class="ps-sub">非对称 Gaussian<br>GSB / ESA 峰</div>
+          </div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step">
+            <div class="ps-num">3</div>
+            <div class="ps-title">分层赋速率</div>
+            <div class="ps-sub">能级越高衰减越快<br>k → K 矩阵</div>
+          </div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step">
+            <div class="ps-num">4</div>
+            <div class="ps-title">求解 ODE</div>
+            <div class="ps-sub">LSODA, n₀: A≥96%<br>→ n<sub>i</sub>(t)</div>
+          </div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step">
+            <div class="ps-num">5</div>
+            <div class="ps-title">计算 ΔA</div>
+            <div class="ps-sub">σ(λ)·n(t)<br>归一化输出</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ Slide 4.1: 小白入门 ① 数据怎么变成模型输入 ══ -->
+      <section>
+        <h2 style="margin-bottom:6px;">数据怎么"喂"给模型？</h2>
+        <p style="font-size:0.55em;color:#9A8878;margin:0 0 18px 0;">把一张二维"波长 × 时间"的彩色地图，切成 100 个小方块再排成一行</p>
+
+        <div style="display:grid;grid-template-columns:auto auto auto;gap:30px;width:94%;margin:0 auto;align-items:center;justify-content:center;">
+
+          <!-- 左：原始 ΔA 图像示意 -->
+          <div style="background:#F5EFE6;border:2px solid #C8956C;border-radius:10px;padding:24px 30px;text-align:center;width:620px;">
+            <div style="font-size:0.55em;color:#8B5E3C;font-weight:bold;margin-bottom:14px;">原始数据 ΔA(λ, t)</div>
+            <div style="position:relative;width:560px;height:400px;margin:0 auto;background:linear-gradient(135deg,#FFE4D2 0%,#FFB890 30%,#C8956C 60%,#6B4030 100%);border-radius:6px;overflow:hidden;">
+              <svg width="560" height="400" style="position:absolute;inset:0;">
+                <g stroke="rgba(255,255,255,0.55)" stroke-width="1.4" fill="none">
+                  <line x1="56" y1="0" x2="56" y2="400"/><line x1="112" y1="0" x2="112" y2="400"/>
+                  <line x1="168" y1="0" x2="168" y2="400"/><line x1="224" y1="0" x2="224" y2="400"/>
+                  <line x1="280" y1="0" x2="280" y2="400"/><line x1="336" y1="0" x2="336" y2="400"/>
+                  <line x1="392" y1="0" x2="392" y2="400"/><line x1="448" y1="0" x2="448" y2="400"/>
+                  <line x1="504" y1="0" x2="504" y2="400"/>
+                  <line x1="0" y1="40" x2="560" y2="40"/><line x1="0" y1="80" x2="560" y2="80"/>
+                  <line x1="0" y1="120" x2="560" y2="120"/><line x1="0" y1="160" x2="560" y2="160"/>
+                  <line x1="0" y1="200" x2="560" y2="200"/><line x1="0" y1="240" x2="560" y2="240"/>
+                  <line x1="0" y1="280" x2="560" y2="280"/><line x1="0" y1="320" x2="560" y2="320"/>
+                  <line x1="0" y1="360" x2="560" y2="360"/>
+                </g>
+              </svg>
+              <div style="position:absolute;left:10px;top:8px;font-size:18px;color:#FFF8F0;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.4);">λ ↑ 150</div>
+              <div style="position:absolute;right:10px;bottom:8px;font-size:18px;color:#FFF8F0;font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,0.4);">t → 100</div>
+            </div>
+            <div style="font-size:0.46em;color:#5A4030;margin-top:14px;">150 波长 × 100 时间点 的彩色"地图"</div>
+          </div>
+
+          <!-- 中：箭头 -->
+          <div style="text-align:center;">
+            <div style="font-size:2.4em;color:#C8956C;">→</div>
+            <div style="font-size:0.36em;color:#9A8878;margin-top:6px;">切成<br>15×10<br>小块</div>
+          </div>
+
+          <!-- 右：100 个 patch token 序列 -->
+          <div style="background:#F5EFE6;border:2px solid #C8956C;border-radius:10px;padding:24px 30px;width:620px;">
+            <div style="font-size:0.55em;color:#8B5E3C;font-weight:bold;margin-bottom:14px;text-align:center;">100 个 Patch Token</div>
+            <div style="display:grid;grid-template-columns:repeat(10,52px);grid-template-rows:repeat(10,36px);gap:5px;margin:0 auto 14px;justify-content:center;">
+              <div style="aspect-ratio:1;background:#FFE4D2;border-radius:2px;"></div><div style="aspect-ratio:1;background:#FFD8BC;border-radius:2px;"></div><div style="aspect-ratio:1;background:#FFC9A4;border-radius:2px;"></div><div style="aspect-ratio:1;background:#FFBA8E;border-radius:2px;"></div><div style="aspect-ratio:1;background:#F5A878;border-radius:2px;"></div><div style="aspect-ratio:1;background:#E89868;border-radius:2px;"></div><div style="aspect-ratio:1;background:#D8885A;border-radius:2px;"></div><div style="aspect-ratio:1;background:#C8784C;border-radius:2px;"></div><div style="aspect-ratio:1;background:#B86840;border-radius:2px;"></div><div style="aspect-ratio:1;background:#A85838;border-radius:2px;"></div>
+              <div style="aspect-ratio:1;background:#FFD8BC;border-radius:2px;"></div><div style="aspect-ratio:1;background:#FFC9A4;border-radius:2px;"></div><div style="aspect-ratio:1;background:#FFBA8E;border-radius:2px;"></div><div style="aspect-ratio:1;background:#F5A878;border-radius:2px;"></div><div style="aspect-ratio:1;background:#E89868;border-radius:2px;"></div><div style="aspect-ratio:1;background:#D8885A;border-radius:2px;"></div><div style="aspect-ratio:1;background:#C8784C;border-radius:2px;"></div><div style="aspect-ratio:1;background:#B86840;border-radius:2px;"></div><div style="aspect-ratio:1;background:#A85838;border-radius:2px;"></div><div style="aspect-ratio:1;background:#985030;border-radius:2px;"></div>
+              <div style="aspect-ratio:1;background:#FFC9A4;border-radius:2px;"></div><div style="aspect-ratio:1;background:#FFBA8E;border-radius:2px;"></div><div style="aspect-ratio:1;background:#F5A878;border-radius:2px;"></div><div style="aspect-ratio:1;background:#E89868;border-radius:2px;"></div><div style="aspect-ratio:1;background:#D8885A;border-radius:2px;"></div><div style="aspect-ratio:1;background:#C8784C;border-radius:2px;"></div><div style="aspect-ratio:1;background:#B86840;border-radius:2px;"></div><div style="aspect-ratio:1;background:#A85838;border-radius:2px;"></div><div style="aspect-ratio:1;background:#985030;border-radius:2px;"></div><div style="aspect-ratio:1;background:#884828;border-radius:2px;"></div>
+              <div style="aspect-ratio:1;background:#FFBA8E;border-radius:2px;"></div><div style="aspect-ratio:1;background:#F5A878;border-radius:2px;"></div><div style="aspect-ratio:1;background:#E89868;border-radius:2px;"></div><div style="aspect-ratio:1;background:#D8885A;border-radius:2px;"></div><div style="aspect-ratio:1;background:#C8784C;border-radius:2px;"></div><div style="aspect-ratio:1;background:#B86840;border-radius:2px;"></div><div style="aspect-ratio:1;background:#A85838;border-radius:2px;"></div><div style="aspect-ratio:1;background:#985030;border-radius:2px;"></div><div style="aspect-ratio:1;background:#884828;border-radius:2px;"></div><div style="aspect-ratio:1;background:#784020;border-radius:2px;"></div>
+              <div style="aspect-ratio:1;background:#F5A878;border-radius:2px;"></div><div style="aspect-ratio:1;background:#E89868;border-radius:2px;"></div><div style="aspect-ratio:1;background:#D8885A;border-radius:2px;"></div><div style="aspect-ratio:1;background:#C8784C;border-radius:2px;"></div><div style="aspect-ratio:1;background:#B86840;border-radius:2px;"></div><div style="aspect-ratio:1;background:#A85838;border-radius:2px;"></div><div style="aspect-ratio:1;background:#985030;border-radius:2px;"></div><div style="aspect-ratio:1;background:#884828;border-radius:2px;"></div><div style="aspect-ratio:1;background:#784020;border-radius:2px;"></div><div style="aspect-ratio:1;background:#682018;border-radius:2px;"></div>
+              <div style="aspect-ratio:1;background:#E89868;border-radius:2px;"></div><div style="aspect-ratio:1;background:#D8885A;border-radius:2px;"></div><div style="aspect-ratio:1;background:#C8784C;border-radius:2px;"></div><div style="aspect-ratio:1;background:#B86840;border-radius:2px;"></div><div style="aspect-ratio:1;background:#A85838;border-radius:2px;"></div><div style="aspect-ratio:1;background:#985030;border-radius:2px;"></div><div style="aspect-ratio:1;background:#884828;border-radius:2px;"></div><div style="aspect-ratio:1;background:#784020;border-radius:2px;"></div><div style="aspect-ratio:1;background:#682018;border-radius:2px;"></div><div style="aspect-ratio:1;background:#581810;border-radius:2px;"></div>
+              <div style="aspect-ratio:1;background:#D8885A;border-radius:2px;"></div><div style="aspect-ratio:1;background:#C8784C;border-radius:2px;"></div><div style="aspect-ratio:1;background:#B86840;border-radius:2px;"></div><div style="aspect-ratio:1;background:#A85838;border-radius:2px;"></div><div style="aspect-ratio:1;background:#985030;border-radius:2px;"></div><div style="aspect-ratio:1;background:#884828;border-radius:2px;"></div><div style="aspect-ratio:1;background:#784020;border-radius:2px;"></div><div style="aspect-ratio:1;background:#682018;border-radius:2px;"></div><div style="aspect-ratio:1;background:#581810;border-radius:2px;"></div><div style="aspect-ratio:1;background:#481008;border-radius:2px;"></div>
+              <div style="aspect-ratio:1;background:#C8784C;border-radius:2px;"></div><div style="aspect-ratio:1;background:#B86840;border-radius:2px;"></div><div style="aspect-ratio:1;background:#A85838;border-radius:2px;"></div><div style="aspect-ratio:1;background:#985030;border-radius:2px;"></div><div style="aspect-ratio:1;background:#884828;border-radius:2px;"></div><div style="aspect-ratio:1;background:#784020;border-radius:2px;"></div><div style="aspect-ratio:1;background:#682018;border-radius:2px;"></div><div style="aspect-ratio:1;background:#581810;border-radius:2px;"></div><div style="aspect-ratio:1;background:#481008;border-radius:2px;"></div><div style="aspect-ratio:1;background:#380800;border-radius:2px;"></div>
+              <div style="aspect-ratio:1;background:#B86840;border-radius:2px;"></div><div style="aspect-ratio:1;background:#A85838;border-radius:2px;"></div><div style="aspect-ratio:1;background:#985030;border-radius:2px;"></div><div style="aspect-ratio:1;background:#884828;border-radius:2px;"></div><div style="aspect-ratio:1;background:#784020;border-radius:2px;"></div><div style="aspect-ratio:1;background:#682018;border-radius:2px;"></div><div style="aspect-ratio:1;background:#581810;border-radius:2px;"></div><div style="aspect-ratio:1;background:#481008;border-radius:2px;"></div><div style="aspect-ratio:1;background:#380800;border-radius:2px;"></div><div style="aspect-ratio:1;background:#280000;border-radius:2px;"></div>
+              <div style="aspect-ratio:1;background:#A85838;border-radius:2px;"></div><div style="aspect-ratio:1;background:#985030;border-radius:2px;"></div><div style="aspect-ratio:1;background:#884828;border-radius:2px;"></div><div style="aspect-ratio:1;background:#784020;border-radius:2px;"></div><div style="aspect-ratio:1;background:#682018;border-radius:2px;"></div><div style="aspect-ratio:1;background:#581810;border-radius:2px;"></div><div style="aspect-ratio:1;background:#481008;border-radius:2px;"></div><div style="aspect-ratio:1;background:#380800;border-radius:2px;"></div><div style="aspect-ratio:1;background:#280000;border-radius:2px;"></div><div style="aspect-ratio:1;background:#180000;border-radius:2px;"></div>
+            </div>
+            <div style="font-size:0.46em;color:#5A4030;text-align:center;">每块 → 一个 384 维"摘要向量"</div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:18px;background:#FFF8F0;border-left:4px solid #B85450;padding:11px 18px;width:88%;margin-left:auto;margin-right:auto;font-size:0.50em;color:#5A4030;border-radius:0 6px 6px 0;">
+          <strong style="color:#B85450;">类比：</strong>就像把一篇文章切成段落，每段都先写一句"摘要"再交给模型。<br>
+          模型不直接看像素，而是看 100 个"光谱片段的摘要" + 它们各自的（波长, 时间）位置。
+        </div>
+      </section>
+
+      <!-- ══ Slide 4.2: 小白入门 ② 为什么要用 Transformer ══ -->
+      <section>
+        <h2 style="margin-bottom:6px;">为什么不用传统拟合 / CNN？</h2>
+        <p style="font-size:0.55em;color:#9A8878;margin:0 0 18px 0;">三种方法各自的优势与瓶颈</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;width:94%;margin:0 auto;">
+
+          <div style="background:#F5EFE6;border:2px solid #9A8878;border-radius:10px;padding:14px 16px;">
+            <div style="font-size:0.63em;color:#6B6055;font-weight:bold;text-align:center;margin-bottom:8px;">传统全局拟合</div>
+            <div style="font-size:0.48em;color:#7A6055;text-align:center;line-height:1.7;margin-bottom:12px;">
+              人工写出 σ(λ) 高斯参数 + 速率方程<br><span style="white-space:nowrap">→ Levenberg-Marquardt 求最优解</span>
+            </div>
+            <div style="border-top:1px solid #E0D5C5;padding-top:10px;font-size:0.48em;color:#5A4030;line-height:1.85;">
+              <div><span style="color:#4F8B68;">✓</span> 物理可解释</div>
+              <div><span style="color:#B85450;">✗</span> 必须先猜物种数</div>
+              <div><span style="color:#B85450;">✗</span> 易陷局部最优</div>
+              <div><span style="color:#B85450;">✗</span> 单条数据 → 数小时</div>
+            </div>
+          </div>
+
+          <div style="background:#F5EFE6;border:2px solid #C8956C;border-radius:10px;padding:14px 16px;">
+            <div style="font-size:0.63em;color:#8B5E3C;font-weight:bold;text-align:center;margin-bottom:8px;">卷积神经网络 (CNN)</div>
+            <div style="font-size:0.48em;color:#7A5440;text-align:center;line-height:1.7;margin-bottom:12px;">
+              用 3×3 / 5×5 局部卷积核<br>逐层提取局部特征
+            </div>
+            <div style="border-top:1px solid #E0D5C5;padding-top:10px;font-size:0.48em;color:#5A4030;line-height:1.85;">
+              <div><span style="color:#4F8B68;">✓</span> 速度快</div>
+              <div><span style="color:#4F8B68;">✓</span> 适合局部纹理</div>
+              <div><span style="color:#B85450;">✗</span> 感受野受限，远距相关性弱</div>
+              <div><span style="color:#B85450;">✗</span> 长寿命物种需跨整张时间轴</div>
+            </div>
+          </div>
+
+          <div style="background:#FFF2EE;border:2px solid #B85450;border-radius:10px;padding:14px 16px;box-shadow:0 4px 14px rgba(184,84,80,0.10);">
+            <div style="font-size:0.63em;color:#B85450;font-weight:bold;text-align:center;margin-bottom:8px;">Transformer ★</div>
+            <div style="font-size:0.48em;color:#6A3530;text-align:center;line-height:1.7;margin-bottom:12px;">
+              任意两个 patch 之间<br>都可以"全局对话"
+            </div>
+            <div style="border-top:1px solid rgba(184,84,80,0.25);padding-top:10px;font-size:0.48em;color:#5A2828;line-height:1.85;">
+              <div><span style="color:#4F8B68;">✓</span> 全局自注意力 ⇒ 捕捉长寿命物种</div>
+              <div><span style="color:#4F8B68;">✓</span> 单次前向 → 多任务输出</div>
+              <div><span style="color:#4F8B68;">✓</span> 注意力权重可视化 ⇒ 可解释</div>
+              <div><span style="color:#9A8878;">·</span> 代价：需要大量训练样本</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:16px;background:#FFF8F0;border-left:4px solid #B85450;padding:11px 18px;width:88%;margin-left:auto;margin-right:auto;font-size:0.56em;color:#5A4030;border-radius:0 6px 6px 0;">
+          <strong style="color:#B85450;">关键差异：</strong>CNN 的卷积核只看附近几个像素；<br>
+          Transformer 的自注意力让<strong>每个 patch 都能直接询问其它 99 个 patch</strong>——这正是分辨多种重叠物种所必需的全局视野。
+        </div>
+      </section>
+
+      <!-- ══ Slide 4.3: 小白入门 ③ 注意力热图怎么读 ══ -->
+      <section>
+        <h2 style="margin-bottom:6px;">如何读懂一张注意力热图？</h2>
+        <p style="font-size:0.55em;color:#9A8878;margin:0 0 16px 0;">一图读懂注意力图（Attention Map）</p>
+
+        <div style="display:grid;grid-template-columns:0.95fr 1.05fr;gap:24px;width:94%;margin:0 auto;align-items:center;">
+
+          <div style="text-align:center;">
+            <div style="display:inline-flex;align-items:center;gap:10px;">
+              <div style="width:24px;display:flex;align-items:center;justify-content:center;">
+                <div style="transform:rotate(-90deg);font-size:0.42em;color:#8B5E3C;font-weight:bold;white-space:nowrap;">"谁在看" (Query Patch)</div>
+              </div>
+              <div>
+              <div style="display:grid;grid-template-columns:repeat(10,28px);grid-auto-rows:28px;gap:1px;background:#E0D5C5;padding:1px;border-radius:4px;">
+                <div style="background:#FFE4D2;"></div><div style="background:#F5C8A8;"></div><div style="background:#E0A878;"></div><div style="background:#C88858;"></div><div style="background:#B07040;"></div><div style="background:#985830;"></div><div style="background:#985830;"></div><div style="background:#B07040;"></div><div style="background:#C88858;"></div><div style="background:#E0A878;"></div>
+                <div style="background:#F5C8A8;"></div><div style="background:#E0A878;"></div><div style="background:#C88858;"></div><div style="background:#B07040;"></div><div style="background:#985830;"></div><div style="background:#783820;"></div><div style="background:#985830;"></div><div style="background:#B07040;"></div><div style="background:#C88858;"></div><div style="background:#E0A878;"></div>
+                <div style="background:#E0A878;"></div><div style="background:#C88858;"></div><div style="background:#B07040;"></div><div style="background:#985830;"></div><div style="background:#783820;"></div><div style="background:#582010;"></div><div style="background:#783820;"></div><div style="background:#985830;"></div><div style="background:#B07040;"></div><div style="background:#C88858;"></div>
+                <div style="background:#C88858;"></div><div style="background:#B07040;"></div><div style="background:#985830;"></div><div style="background:#783820;"></div><div style="background:#582010;"></div><div style="background:#380800;"></div><div style="background:#582010;"></div><div style="background:#783820;"></div><div style="background:#985830;"></div><div style="background:#B07040;"></div>
+                <div style="background:#B07040;"></div><div style="background:#985830;"></div><div style="background:#783820;"></div><div style="background:#582010;"></div><div style="background:#380800;"></div><div style="background:#180000;"></div><div style="background:#380800;"></div><div style="background:#582010;"></div><div style="background:#783820;"></div><div style="background:#985830;"></div>
+                <div style="background:#985830;"></div><div style="background:#783820;"></div><div style="background:#582010;"></div><div style="background:#380800;"></div><div style="background:#180000;"></div><div style="background:#080000;"></div><div style="background:#180000;"></div><div style="background:#380800;"></div><div style="background:#582010;"></div><div style="background:#783820;"></div>
+                <div style="background:#985830;"></div><div style="background:#985830;"></div><div style="background:#783820;"></div><div style="background:#582010;"></div><div style="background:#380800;"></div><div style="background:#180000;"></div><div style="background:#380800;"></div><div style="background:#582010;"></div><div style="background:#783820;"></div><div style="background:#985830;"></div>
+                <div style="background:#B07040;"></div><div style="background:#B07040;"></div><div style="background:#985830;"></div><div style="background:#783820;"></div><div style="background:#582010;"></div><div style="background:#380800;"></div><div style="background:#582010;"></div><div style="background:#783820;"></div><div style="background:#985830;"></div><div style="background:#B07040;"></div>
+                <div style="background:#C88858;"></div><div style="background:#C88858;"></div><div style="background:#B07040;"></div><div style="background:#985830;"></div><div style="background:#783820;"></div><div style="background:#582010;"></div><div style="background:#783820;"></div><div style="background:#985830;"></div><div style="background:#B07040;"></div><div style="background:#C88858;"></div>
+                <div style="background:#E0A878;"></div><div style="background:#E0A878;"></div><div style="background:#C88858;"></div><div style="background:#B07040;"></div><div style="background:#985830;"></div><div style="background:#783820;"></div><div style="background:#985830;"></div><div style="background:#B07040;"></div><div style="background:#C88858;"></div><div style="background:#E0A878;"></div>
+              </div>
+              <div style="font-size:0.42em;color:#8B5E3C;font-weight:bold;margin-top:8px;">"在看谁" (Key Patch)</div>
+              </div>
+            </div>
+            <div style="margin-top:14px;display:flex;align-items:center;gap:8px;justify-content:center;">
+              <span style="font-size:0.36em;color:#9A8878;">弱</span>
+              <div style="width:160px;height:10px;border-radius:2px;background:linear-gradient(to right,#FFE4D2,#C88858,#582010,#080000);"></div>
+              <span style="font-size:0.36em;color:#9A8878;">强</span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px;font-size:0.50em;color:#5A4030;line-height:1.68;">
+            <div style="background:#F5EFE6;border:1.5px solid #C8956C;border-radius:8px;padding:11px 16px;">
+              <strong style="color:#8B5E3C;">坐标</strong>　100×100 的方格<br>
+              · <strong>每行</strong> = 一个发问的 patch<br>
+              · <strong>每列</strong> = 它询问的 patch
+            </div>
+            <div style="background:#F5EFE6;border:1.5px solid #C8956C;border-radius:8px;padding:11px 16px;">
+              <strong style="color:#8B5E3C;">颜色</strong>　越深 → 关注度越高<br>
+              · 一行所有数加起来 = 1（softmax 概率分布）
+            </div>
+            <div style="background:#FFF2EE;border:1.5px solid #B85450;border-radius:8px;padding:11px 16px;">
+              <strong style="color:#B85450;">怎么读：</strong><br>
+              · <strong>对角带</strong> ⇒ 每个 patch 重点看自己附近（局部）<br>
+              · <strong>对角线之外的亮块</strong> ⇒ 跨越远距的"长程对话"（全局）<br>
+              · <strong>整列都亮</strong> ⇒ 这一列的 patch 是"明星"，几乎所有人都在看它
+            </div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:14px;background:#FFF8F0;border-left:4px solid #4F8B68;padding:10px 18px;width:88%;margin-left:auto;margin-right:auto;font-size:0.46em;color:#3A5040;border-radius:0 6px 6px 0;">
+          <strong style="color:#4F8B68;">浅层 vs 深层：</strong>第 1 层往往呈"局部对角带"（关注邻近时间），<br>
+          到第 8 层常常出现"明星列"（聚焦关键波段）——这正是后面"逐层演化"页要展示的重点。
+        </div>
+      </section>
+
+      <!-- ══ Slide 4.4: 小白入门 ④ 模型同时预测什么 ══ -->
+      <section>
+        <h2 style="margin-bottom:6px;">一次前向传播，同时回答 5 个问题</h2>
+        <p style="font-size:0.55em;color:#9A8878;margin:0 0 18px 0;">CLS token 聚合的 384 维向量 → 5 个独立"输出头"</p>
+
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:11px;width:96%;margin:0 auto;">
+
+          <div style="background:#F5EFE6;border:2px solid #4F8B68;border-radius:10px;padding:14px 12px;text-align:center;">
+            <div style="font-size:1.6em;margin-bottom:6px;">🔢</div>
+            <div style="font-size:0.50em;color:#4F8B68;font-weight:bold;margin-bottom:6px;">激发态数量</div>
+            <div style="font-size:0.36em;color:#5A4030;line-height:1.6;">N = 1, 2, 3 …<br>(分类问题)</div>
+            <div style="margin-top:8px;font-size:0.34em;color:#9A8878;border-top:1px solid #E0D5C5;padding-top:6px;">这条曲线背后到底有几个物种？</div>
+          </div>
+
+          <div style="background:#F5EFE6;border:2px solid #C8956C;border-radius:10px;padding:14px 12px;text-align:center;">
+            <div style="font-size:1.6em;margin-bottom:6px;">📈</div>
+            <div style="font-size:0.50em;color:#8B5E3C;font-weight:bold;margin-bottom:6px;">每个物种光谱</div>
+            <div style="font-size:0.36em;color:#5A4030;line-height:1.6;">σᵢ(λ)<br>(150 维曲线)</div>
+            <div style="margin-top:8px;font-size:0.34em;color:#9A8878;border-top:1px solid #E0D5C5;padding-top:6px;">每个物种"长什么样"？</div>
+          </div>
+
+          <div style="background:#F5EFE6;border:2px solid #B85450;border-radius:10px;padding:14px 12px;text-align:center;">
+            <div style="font-size:1.6em;margin-bottom:6px;">🌳</div>
+            <div style="font-size:0.50em;color:#B85450;font-weight:bold;margin-bottom:6px;">反应拓扑</div>
+            <div style="font-size:0.36em;color:#5A4030;line-height:1.6;">有向图<br>A→B→C 等</div>
+            <div style="margin-top:8px;font-size:0.34em;color:#9A8878;border-top:1px solid #E0D5C5;padding-top:6px;">谁先衰变成谁？</div>
+          </div>
+
+          <div style="background:#F5EFE6;border:2px solid #C8956C;border-radius:10px;padding:14px 12px;text-align:center;">
+            <div style="font-size:1.6em;margin-bottom:6px;">⚡</div>
+            <div style="font-size:0.50em;color:#8B5E3C;font-weight:bold;margin-bottom:6px;">速率常数</div>
+            <div style="font-size:0.36em;color:#5A4030;line-height:1.6;">kᵢⱼ (ps⁻¹)<br>(回归)</div>
+            <div style="margin-top:8px;font-size:0.34em;color:#9A8878;border-top:1px solid #E0D5C5;padding-top:6px;">衰变快慢有多少？</div>
+          </div>
+
+          <div style="background:#F5EFE6;border:2px solid #4F8B68;border-radius:10px;padding:14px 12px;text-align:center;">
+            <div style="font-size:1.6em;margin-bottom:6px;">📉</div>
+            <div style="font-size:0.50em;color:#4F8B68;font-weight:bold;margin-bottom:6px;">浓度曲线</div>
+            <div style="font-size:0.36em;color:#5A4030;line-height:1.6;">nᵢ(t)<br>(100 时间点)</div>
+            <div style="margin-top:8px;font-size:0.34em;color:#9A8878;border-top:1px solid #E0D5C5;padding-top:6px;">每个物种<br>什么时候多 / 少？</div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:18px;background:#FFF8F0;border-left:4px solid #B85450;padding:13px 20px;width:90%;margin-left:auto;margin-right:auto;font-size:0.50em;color:#5A4030;border-radius:0 6px 6px 0;">
+          <strong style="color:#B85450;">关键洞察：</strong>这 5 个任务<strong>共享同一个 384 维表征</strong>——<br>
+          网络一旦"看懂了"光谱，五个问题就一并回答了。<br>
+          多任务联合训练还能互相约束（比如速率 k 必须能反推出合理的浓度曲线），从而让单任务无法达到的精度成为可能。
+        </div>
+      </section>
+
+      <!-- ══ Slide 3: 模型架构 ══ -->
+      <section>
+        <h2 style="margin-bottom:14px;">TA-Transformer 模型架构</h2>
+        <div style="display:flex;flex-direction:column;gap:5px;width:76%;margin:0 auto;">
+          <div class="arch-box">
+            <strong>Patch Embedding</strong>
+            <span class="c-dim">（150×100 → 100 patches → 384-d）+ 2D 可学习位置编码</span>
+          </div>
+          <div class="arch-arrow">↓ Prepend CLS token → <strong>101 × 384</strong> 输入序列</div>
+          <div class="arch-box" style="border-color:#B85450;background:#FFF2EE;">
+            <strong>Transformer Encoder × 8 层</strong><br>
+            <span class="c-dim">Pre-LN → PhysicsAwareAttention (12 heads, d_k=32) → Add</span><br>
+            <span class="c-dim">Pre-LN → PhysicsConstrainedFFN (384 → 3072 → 384, GELU) → Add</span>
+          </div>
+          <div class="arch-arrow">↓ LayerNorm → 取 CLS token（全局表征 384-d）</div>
+          <div style="display:flex;gap:6px;">
+            <div class="arch-box" style="flex:1;border-color:#4F8B68;background:#EEF5F0;">
+              <strong>SpeciesCountHead</strong><br>激发态数量 N
+            </div>
+            <div class="arch-box" style="flex:1;border-color:#4F8B68;background:#EEF5F0;">
+              <strong>SpeciesIdentifier</strong><br>物种类型 + 光谱形状
+            </div>
+            <div class="arch-box" style="flex:1;border-color:#4F8B68;background:#EEF5F0;">
+              <strong>EdgeRateHead</strong><br>速率常数 k<sub>ij</sub>
+            </div>
+            <div class="arch-box" style="flex:1;border-color:#4F8B68;background:#EEF5F0;">
+              <strong>PopulationHead</strong><br>浓度曲线 n(t)
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:14px;">
+          <span class="stat-badge">d_model = 384</span>
+          <span class="stat-badge">n_heads = 12</span>
+          <span class="stat-badge">n_layers = 8</span>
+          <span class="stat-badge">d_ff = 3072</span>
+          <span class="stat-badge">patch 15×10</span>
+          <span class="stat-badge">101 tokens</span>
+        </div>
+      </section>
+
+      <!-- ══ Slide 4: Patch Embedding 代码 ══ -->
+      <section>
+        <h2 style="margin-bottom:8px;">2D 切块嵌入</h2>
+        <p style="font-size:0.6em;color:#6B6055;margin:0 0 10px 0;">
+          将 ΔA(150×100) 切成 10×10=100 个 patch，线性投影后叠加可学习 2D 位置编码
+        </p>
+
+        <div style="display:grid;grid-template-columns:1.45fr 1fr;gap:18px;width:100%;align-items:stretch;">
+
+          <!-- 左：代码 -->
+          <div class="code-theater" style="width:100%;">
+            <div class="theater-bar">
+              <span class="dot d-r"></span><span class="dot d-y"></span><span class="dot d-g"></span>
+              <span class="theater-fname">src/models/encoder.py — TA2DPatchEmbedding</span>
+            </div>
+            <pre class="theater-pre"><code class="language-python" data-line-numbers="1-8|10-13|14-17|18-21">class TA2DPatchEmbedding(nn.Module):
+    def __init__(self, n_wl=150, n_t=100,
+                 patch_wl=15, patch_t=10, d_model=384):
+        # 150/15=10 波长块 × 100/10=10 时间块，共 100 个 patch
+        self.proj      = nn.Linear(patch_wl * patch_t, d_model)
+        self.wl_embed  = nn.Embedding(n_wl // patch_wl, d_model)
+        self.t_embed   = nn.Embedding(n_t  // patch_t,  d_model)
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, d_model))
+
+    def forward(self, x):  # x: (B, 150, 100) 归一化 ΔA 矩阵
+        B = x.shape[0]
+        # ① unfold 切块 → 展平 → Linear 投影 → (B, 100, 384)
+        patches = x.unfold(1, 15, 15).unfold(2, 10, 10)
+        tokens  = self.proj(patches.contiguous().view(B, 100, 150))
+        # ② 2D 可学习位置编码（波长轴 + 时间轴各自 embed 后叠加）
+        wl = torch.arange(10, device=x.device).repeat_interleave(10)
+        t  = torch.arange(10, device=x.device).repeat(10)
+        tokens += self.wl_embed(wl) + self.t_embed(t)
+        # ③ 拼接 CLS token → 输出 (B, 101, 384)
+        cls = self.cls_token.expand(B, -1, -1)
+        return torch.cat([cls, tokens], dim=1)</code></pre>
+          </div>
+
+          <!-- 右：数据流图 + 关键参数 -->
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:0.50em;">
+
+            <!-- 数据形状流转 -->
+            <div style="background:#FAF5EE;border:1.5px solid #C8956C;border-radius:8px;padding:11px 14px;">
+              <div style="color:#8B5E3C;font-weight:bold;margin-bottom:8px;">数据形状流转</div>
+              <div style="display:flex;flex-direction:column;gap:5px;color:#5A4030;line-height:1.55;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <code style="background:rgba(60,40,20,0.08);padding:2px 7px;border-radius:3px;font-size:0.92em;">(B, 150, 100)</code>
+                  <span style="color:#9A8878;font-size:0.88em;">原始 ΔA 矩阵</span>
+                </div>
+                <div style="text-align:center;color:#C8956C;">↓ unfold 切块</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <code style="background:rgba(60,40,20,0.08);padding:2px 7px;border-radius:3px;font-size:0.92em;">(B, 10, 10, 15, 10)</code>
+                  <span style="color:#9A8878;font-size:0.88em;">10×10 个 15×10 块</span>
+                </div>
+                <div style="text-align:center;color:#C8956C;">↓ 展平 + Linear</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <code style="background:rgba(60,40,20,0.08);padding:2px 7px;border-radius:3px;font-size:0.92em;">(B, 100, 384)</code>
+                  <span style="color:#9A8878;font-size:0.88em;">100 个 token</span>
+                </div>
+                <div style="text-align:center;color:#C8956C;">↓ 加 2D 位置编码 + CLS</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <code style="background:rgba(184,84,80,0.10);padding:2px 7px;border-radius:3px;font-size:0.92em;color:#B85450;font-weight:bold;">(B, 101, 384)</code>
+                  <span style="color:#9A8878;font-size:0.88em;">送入 Encoder</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 关键参数 -->
+            <div style="background:#FFF2EE;border-left:4px solid #B85450;border-radius:0 8px 8px 0;padding:10px 14px;">
+              <div style="color:#B85450;font-weight:bold;margin-bottom:6px;">为什么要 2D 位置编码？</div>
+              <div style="color:#5A2828;line-height:1.6;">
+                每个 patch 来自二维网格，<strong>波长 × 时间</strong>两个轴需要分别编码——一维位置丢失了"哪条波长"和"哪个时刻"的物理含义。
+              </div>
+            </div>
+
+            <!-- CLS token 说明 -->
+            <div style="background:#F2FAF5;border-left:4px solid #4F8B68;border-radius:0 8px 8px 0;padding:10px 14px;">
+              <div style="color:#4F8B68;font-weight:bold;margin-bottom:6px;">CLS token 的角色</div>
+              <div style="color:#3A5040;line-height:1.6;">
+                可学习的"虚拟 patch"——通过自注意力从其它 100 个 patch 收集信息，最终成为整张光谱的<strong>全局摘要</strong>。
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ══ Slide 5: Self-Attention 公式 ══ -->
+      <section>
+        <h2 style="margin-bottom:14px;">缩放点积注意力</h2>
+
+        <!-- 核心公式（居中、加底色框） -->
+        <div style="background:#F7F2EA;border:1.5px solid #E0D5C5;border-radius:10px;padding:14px 24px;margin:0 auto 22px;width:fit-content;">
+          \[ \text{Attention}(Q,K,V) = \text{softmax}\!\left(\frac{QK^{\!\top}}{\sqrt{d_k}}\right)V \]
+        </div>
+
+        <!-- 4 条解释，2×2 网格卡片 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;width:88%;margin:0 auto;font-size:0.62em;">
+
+          <div class="fragment" style="background:#FAF5EE;border-left:4px solid #C8956C;border-radius:0 8px 8px 0;padding:12px 18px;">
+            <div style="font-weight:600;color:#8B5E3C;margin-bottom:5px;">① 三件套从同一输入投影</div>
+            <div style="color:#5A4030;line-height:1.6;">
+              <span class="ann">Q</span> · <span class="ann">K</span> · <span class="ann">V</span>
+              均由同一序列经线性变换得到——这就是<strong>自</strong>注意力的"自"。
+            </div>
+          </div>
+
+          <div class="fragment" style="background:#FFF2EE;border-left:4px solid #B85450;border-radius:0 8px 8px 0;padding:12px 18px;">
+            <div style="font-weight:600;color:#B85450;margin-bottom:5px;">② 缩放防止饱和</div>
+            <div style="color:#5A2828;line-height:1.6;">
+              除以 <span class="ann r">\(\sqrt{d_k}=\sqrt{32}\)</span>，
+              避免大维度下点积过大、softmax 进入饱和区导致梯度消失。
+            </div>
+          </div>
+
+          <div class="fragment" style="background:#FAF5EE;border-left:4px solid #C8956C;border-radius:0 8px 8px 0;padding:12px 18px;">
+            <div style="font-weight:600;color:#8B5E3C;margin-bottom:5px;">③ CLS 在"四处张望"</div>
+            <div style="color:#5A4030;line-height:1.6;">
+              CLS 的 \(Q\) 与全部 100 个 patch 的 \(K\) 做点积，<br>
+              得到的注意力行 = "模型当前在看哪里"。
+            </div>
+          </div>
+
+          <div class="fragment" style="background:#F2FAF5;border-left:4px solid #4F8B68;border-radius:0 8px 8px 0;padding:12px 18px;">
+            <div style="font-weight:600;color:#4F8B68;margin-bottom:5px;">④ 矩阵 → 热图</div>
+            <div style="color:#3A5040;line-height:1.6;">
+              注意力矩阵维度 <span class="ann g">(B, 12, 101, 101)</span>，<br>
+              取第 0 行 reshape 成 10×10 即可作为热图可视化。
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ══ Slide 6: 前向传播代码 ══ -->
+      <section>
+        <h2 style="margin-bottom:8px;">注意力前向传播 — 实际生产代码</h2>
+
+        <div style="display:grid;grid-template-columns:1.45fr 1fr;gap:18px;width:100%;align-items:stretch;">
+
+          <!-- 左：代码 -->
+          <div class="code-theater" style="width:100%;">
+            <div class="theater-bar">
+              <span class="dot d-r"></span><span class="dot d-y"></span><span class="dot d-g"></span>
+              <span class="theater-fname">src/models/encoder.py — PhysicsAwareAttention.forward()</span>
+            </div>
+            <pre class="theater-pre"><code class="language-python" data-line-numbers="1-2|4-6|8-12|14-16">def forward(self, x, mask=None):
+    B, N, C = x.shape  # B=1, N=101（100 patch + 1 CLS），C=384
+
+    # ① 融合 QKV：单次 Linear(384→1152) 同时得到 Q、K、V，节省显存带宽
+    qkv = self.qkv(x).reshape(B, N, 3, self.n_heads, self.d_k)
+    q, k, v = qkv.permute(2, 0, 3, 1, 4).unbind(0)  # (B, 12, 101, 32)
+
+    # ② Scaled Dot-Product：点积缩放 → mask（可选）→ softmax → dropout
+    attn = (q @ k.transpose(-2, -1)) * self.scale  # (B, 12, 101, 101)
+    if mask is not None:
+        attn = attn.masked_fill(mask.bool(), float('-inf'))
+    attn = self.attn_drop(attn.softmax(dim=-1))       # 训练时随机 dropout
+
+    # ③ 加权聚合 V + 输出投影，恢复 d_model=384 维度
+    x = self.proj((attn @ v).transpose(1, 2).reshape(B, N, C))
+    return x, attn  # attn 供 TAEncoder 逐层收集 → 可视化热图</code></pre>
+          </div>
+
+          <!-- 右：tensor 形状追踪 + 工程要点 -->
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:0.50em;">
+
+            <!-- Tensor 形状追踪 -->
+            <div style="background:#FAF5EE;border:1.5px solid #C8956C;border-radius:8px;padding:11px 14px;">
+              <div style="color:#8B5E3C;font-weight:bold;margin-bottom:8px;">Tensor 形状追踪</div>
+              <div style="display:flex;flex-direction:column;gap:4px;color:#5A4030;line-height:1.55;">
+                <div><code style="background:rgba(60,40,20,0.08);padding:1px 6px;border-radius:3px;font-size:0.92em;">x</code> &nbsp;<code style="background:rgba(60,40,20,0.08);padding:1px 6px;border-radius:3px;font-size:0.92em;">(B, 101, 384)</code> 输入</div>
+                <div><code style="background:rgba(60,40,20,0.08);padding:1px 6px;border-radius:3px;font-size:0.92em;">qkv</code> &nbsp;<code style="background:rgba(60,40,20,0.08);padding:1px 6px;border-radius:3px;font-size:0.92em;">(B, 101, 1152)</code> &nbsp;<span style="color:#9A8878;font-size:0.88em;">融合三件套</span></div>
+                <div><code style="background:rgba(60,40,20,0.08);padding:1px 6px;border-radius:3px;font-size:0.92em;">q,k,v</code> &nbsp;<code style="background:rgba(60,40,20,0.08);padding:1px 6px;border-radius:3px;font-size:0.92em;">(B, 12, 101, 32)</code></div>
+                <div><code style="background:rgba(60,40,20,0.08);padding:1px 6px;border-radius:3px;font-size:0.92em;">attn</code> &nbsp;<code style="background:rgba(184,84,80,0.10);padding:1px 6px;border-radius:3px;font-size:0.92em;color:#B85450;">(B, 12, 101, 101)</code> &nbsp;<span style="color:#9A8878;font-size:0.88em;">注意力图</span></div>
+                <div><code style="background:rgba(60,40,20,0.08);padding:1px 6px;border-radius:3px;font-size:0.92em;">out</code> &nbsp;<code style="background:rgba(60,40,20,0.08);padding:1px 6px;border-radius:3px;font-size:0.92em;">(B, 101, 384)</code> 同形状返回</div>
+              </div>
+            </div>
+
+            <!-- 工程要点 1 -->
+            <div style="background:#FFF2EE;border-left:4px solid #B85450;border-radius:0 8px 8px 0;padding:10px 14px;">
+              <div style="color:#B85450;font-weight:bold;margin-bottom:5px;">为什么 QKV 一起算？</div>
+              <div style="color:#5A2828;line-height:1.6;">
+                合并成单次 <code style="background:rgba(184,84,80,0.10);padding:1px 5px;border-radius:2px;">Linear(384→1152)</code> 比拆三个 <code style="background:rgba(184,84,80,0.10);padding:1px 5px;border-radius:2px;">Linear(384→384)</code> <strong>显存带宽更省</strong>，GPU 利用率更高。
+              </div>
+            </div>
+
+            <!-- 工程要点 2 -->
+            <div style="background:#F2FAF5;border-left:4px solid #4F8B68;border-radius:0 8px 8px 0;padding:10px 14px;">
+              <div style="color:#4F8B68;font-weight:bold;margin-bottom:5px;">为什么 12 个头？</div>
+              <div style="color:#3A5040;line-height:1.6;">
+                <code style="background:rgba(79,139,104,0.12);padding:1px 5px;border-radius:2px;">d_model 384 = 12 × 32</code>，每个头独立学习一种"看光谱的视角"——后面的可视化能直观看到不同头关注不同区域。
+              </div>
+            </div>
+
+            <!-- 工程要点 3 -->
+            <div style="background:#FAF5EE;border-left:4px solid #C8956C;border-radius:0 8px 8px 0;padding:10px 14px;">
+              <div style="color:#8B5E3C;font-weight:bold;margin-bottom:5px;">为什么要返回 attn？</div>
+              <div style="color:#5A4030;line-height:1.6;">
+                训练时 attn 不参与 loss，但会被 <code style="background:rgba(60,40,20,0.08);padding:1px 5px;border-radius:2px;">TAEncoder</code> 收集起来，<strong>用于可解释性可视化</strong>——也就是后面那些热图。
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ══ Slide 7: 注意力仪表板 ══ -->
+      <section>
+        <h2 style="margin-bottom:4px;">CLS Token 注意力仪表板</h2>
+        <p style="font-size:0.6em;color:#6B6055;margin:0 0 6px 0;">
+          每格：某层某头的 CLS→patch 注意力热图（10×10，横轴=时间 patch，纵轴=波长 patch）<br>
+          同层归一化，颜色越亮注意力越集中
+        </p>
+        <div style="display:flex;gap:14px;justify-content:center;width:78%;margin:0 auto;">
+          <div style="flex:1;text-align:center;">
+            <div class="layer-label" style="font-size:0.52em;margin-bottom:3px;">Layers 1–4（前四层）</div>
+            <img src="attention_viz/attention_dashboard_1_4.png"
+                 style="width:100%;border-radius:6px;object-fit:contain;">
+          </div>
+          <div style="flex:1;text-align:center;">
+            <div class="layer-label" style="font-size:0.52em;margin-bottom:3px;">Layers 5–8（后四层）</div>
+            <img src="attention_viz/attention_dashboard_5_8.png"
+                 style="width:100%;border-radius:6px;object-fit:contain;">
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ Slide 8: 逐层演化（全部 8 层） ══ -->
+      <section>
+        <h2 style="margin-bottom:5px;">逐层注意力演化（全部 8 层）</h2>
+        <p style="font-size:0.6em;color:#6B6055;margin:0 0 6px 0;">
+          每图展示该层全部 8 个注意力头的 CLS→patch 热图，同层颜色范围统一归一化；随层数加深注意力从弥散逐步聚焦
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px 4px;width:97%;margin:0 auto;">
+          <div><div class="layer-label">Layer 1</div><img src="attention_viz/attention_layer_1.png" style="width:100%;border-radius:4px;"></div>
+          <div><div class="layer-label">Layer 2</div><img src="attention_viz/attention_layer_2.png" style="width:100%;border-radius:4px;"></div>
+          <div><div class="layer-label">Layer 3</div><img src="attention_viz/attention_layer_3.png" style="width:100%;border-radius:4px;"></div>
+          <div><div class="layer-label">Layer 4</div><img src="attention_viz/attention_layer_4.png" style="width:100%;border-radius:4px;"></div>
+          <div><div class="layer-label">Layer 5</div><img src="attention_viz/attention_layer_5.png" style="width:100%;border-radius:4px;"></div>
+          <div><div class="layer-label">Layer 6</div><img src="attention_viz/attention_layer_6.png" style="width:100%;border-radius:4px;"></div>
+          <div><div class="layer-label">Layer 7</div><img src="attention_viz/attention_layer_7.png" style="width:100%;border-radius:4px;"></div>
+          <div><div class="layer-label">Layer 8</div><img src="attention_viz/attention_layer_8.png" style="width:100%;border-radius:4px;"></div>
+        </div>
+      </section>
+
+      <!-- ══ Slide 9: Head 跨层演化 ══ -->
+      <section>
+        <h2 style="margin-bottom:5px;">注意力头跨层演化</h2>
+        <p style="font-size:0.6em;color:#6B6055;margin:0 0 10px 0;">
+          同一注意力头在 Layer 1→8 的 CLS 注意力变化：<strong>浅层弥散探索</strong>全谱，<strong>深层聚焦</strong>关键激发态信号区域
+        </p>
+        <div style="display:flex;flex-direction:column;gap:5px;width:97%;margin:0 auto;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:0.44em;font-weight:bold;color:#8B5E3C;min-width:16px;text-align:center;letter-spacing:0.05em;">Head 1</div>
+            <img src="attention_viz/attention_head_1_evolution.png" style="flex:1;min-width:0;border-radius:4px;display:block;">
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:0.44em;font-weight:bold;color:#8B5E3C;min-width:16px;text-align:center;letter-spacing:0.05em;">Head 2</div>
+            <img src="attention_viz/attention_head_2_evolution.png" style="flex:1;min-width:0;border-radius:4px;display:block;">
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:0.44em;font-weight:bold;color:#8B5E3C;min-width:16px;text-align:center;letter-spacing:0.05em;">Head 3</div>
+            <img src="attention_viz/attention_head_3_evolution.png" style="flex:1;min-width:0;border-radius:4px;display:block;">
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:0.44em;font-weight:bold;color:#8B5E3C;min-width:16px;text-align:center;letter-spacing:0.05em;">Head 4</div>
+            <img src="attention_viz/attention_head_4_evolution.png" style="flex:1;min-width:0;border-radius:4px;display:block;">
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ Slide 11.5: 训练结果（里程碑版本 v1.8 / D10-M18）══ -->
+      <section>
+        <h2 style="margin-bottom:6px;">最新训练结果（v1.8 · D10-M18 · 300 epoch）</h2>
+        <p style="font-size:0.50em;color:#9A8878;margin:0 0 14px 0;">
+          修复 matrix_exp_pade squaring bug → pop_A/B 首次解锁 &nbsp;·&nbsp; commit
+          <code style="background:rgba(60,40,20,0.08);padding:1px 6px;border-radius:3px;">ca5ed6e</code>
+          &nbsp;·&nbsp; 模型 <strong style="color:#8B5E3C;">h200_large</strong>（38M 参数）
+        </p>
+
+        <!-- 上排：5 个核心指标卡 -->
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:9px;width:96%;margin:0 auto 12px;">
+
+          <div style="background:#F5EFE6;border:2px solid #4F8B68;border-radius:9px;padding:10px 8px;text-align:center;">
+            <div style="font-size:0.40em;color:#7A8878;margin-bottom:2px;">物种数预测</div>
+            <div style="font-size:1.18em;color:#4F8B68;font-weight:bold;line-height:1;">99.85%</div>
+            <div style="font-size:0.34em;color:#9A8878;margin-top:3px;">n_species_acc</div>
+          </div>
+
+          <div style="background:#F5EFE6;border:2px solid #4F8B68;border-radius:9px;padding:10px 8px;text-align:center;">
+            <div style="font-size:0.40em;color:#7A8878;margin-bottom:2px;">谱形相关</div>
+            <div style="font-size:1.18em;color:#4F8B68;font-weight:bold;line-height:1;">0.7276</div>
+            <div style="font-size:0.34em;color:#9A8878;margin-top:3px;">spectrum_corr</div>
+          </div>
+
+          <div style="background:#F5EFE6;border:2px solid #C8956C;border-radius:9px;padding:10px 8px;text-align:center;">
+            <div style="font-size:0.40em;color:#7A6055;margin-bottom:2px;">反应路径 F1</div>
+            <div style="font-size:1.18em;color:#8B5E3C;font-weight:bold;line-height:1;">0.9469</div>
+            <div style="font-size:0.34em;color:#9A8878;margin-top:3px;">path_f1</div>
+          </div>
+
+          <div style="background:#F5EFE6;border:2px solid #C8956C;border-radius:9px;padding:10px 8px;text-align:center;">
+            <div style="font-size:0.40em;color:#7A6055;margin-bottom:2px;">寿命相对误差</div>
+            <div style="font-size:1.18em;color:#8B5E3C;font-weight:bold;line-height:1;">4.19%</div>
+            <div style="font-size:0.34em;color:#9A8878;margin-top:3px;">lifetime_err</div>
+          </div>
+
+          <div style="background:#F2FAF5;border:2px solid #1A8050;border-radius:9px;padding:10px 8px;text-align:center;">
+            <div style="font-size:0.40em;color:#1A5030;margin-bottom:2px;">全物种布居均值</div>
+            <div style="font-size:1.18em;color:#1A5030;font-weight:bold;line-height:1;">0.9925</div>
+            <div style="font-size:0.34em;color:#9A8878;margin-top:3px;">A·B·C = 1.00·0.99·0.99</div>
+          </div>
+
+        </div>
+
+        <!-- 下排：解读 + 趋势 -->
+        <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:14px;width:96%;margin:0 auto;">
+
+          <!-- 左：四版本进化对比表 -->
+          <div style="background:#FAF5EE;border:1.5px solid #E0D5C5;border-radius:9px;padding:11px 14px;">
+            <div style="font-size:0.46em;color:#8B5E3C;font-weight:bold;margin-bottom:8px;">关键里程碑进化</div>
+            <table style="width:100%;font-size:0.36em;color:#5A4030;border-collapse:collapse;">
+              <thead>
+                <tr style="border-bottom:1.5px solid #C8956C;color:#8B5E3C;">
+                  <th style="text-align:left;padding:4px 0;">版本</th>
+                  <th style="text-align:right;padding:4px 6px;">spectrum</th>
+                  <th style="text-align:right;padding:4px 6px;">pop_A</th>
+                  <th style="text-align:right;padding:4px 6px;">pop_B</th>
+                  <th style="text-align:right;padding:4px 0;">备注</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px dashed #E0D5C5;">
+                  <td style="padding:4px 0;color:#9A8878;">v0.20 D10-M6†</td>
+                  <td style="text-align:right;padding:4px 6px;">0.730</td>
+                  <td style="text-align:right;padding:4px 6px;color:#9A8878;">0.978†</td>
+                  <td style="text-align:right;padding:4px 6px;color:#9A8878;">0.922†</td>
+                  <td style="text-align:right;padding:4px 0;color:#9A8878;font-size:0.92em;">旧时间轴峰值</td>
+                </tr>
+                <tr style="border-bottom:1px dashed #E0D5C5;background:rgba(0,0,0,0.04);">
+                  <td style="padding:4px 0;color:#ABABAB;">v0.24 D10-M9 ✗</td>
+                  <td style="text-align:right;padding:4px 6px;color:#ABABAB;">0.622</td>
+                  <td style="text-align:right;padding:4px 6px;color:#C00;font-weight:bold;">0.00</td>
+                  <td style="text-align:right;padding:4px 6px;color:#C00;font-weight:bold;">0.00</td>
+                  <td style="text-align:right;padding:4px 0;color:#9A8878;font-size:0.92em;">时间轴修正→崩溃</td>
+                </tr>
+                <tr style="border-bottom:1px dashed #E0D5C5;background:rgba(0,0,0,0.04);">
+                  <td style="padding:4px 0;color:#ABABAB;">v1.6 D10-M15</td>
+                  <td style="text-align:right;padding:4px 6px;color:#ABABAB;">0.704</td>
+                  <td style="text-align:right;padding:4px 6px;color:#C00;font-weight:bold;">0.00</td>
+                  <td style="text-align:right;padding:4px 6px;color:#C00;font-weight:bold;">0.00</td>
+                  <td style="text-align:right;padding:4px 0;color:#9A8878;font-size:0.92em;">重训仍无解</td>
+                </tr>
+                <tr style="background:rgba(26,128,80,0.10);">
+                  <td style="padding:4px 0;color:#1A5030;font-weight:bold;">v1.8 D10-M18 ★</td>
+                  <td style="text-align:right;padding:4px 6px;">0.728</td>
+                  <td style="text-align:right;padding:4px 6px;color:#1A5030;"><strong>0.998</strong></td>
+                  <td style="text-align:right;padding:4px 6px;color:#1A5030;"><strong>0.991</strong></td>
+                  <td style="text-align:right;padding:4px 0;color:#1A5030;font-size:0.92em;font-weight:bold;">Bug 修复！</td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="margin-top:8px;font-size:0.34em;color:#9A8878;line-height:1.55;">
+              † = 旧时间轴（times_norm bug），pop 值为虚高指标，无物理意义。
+            </div>
+          </div>
+
+          <!-- 右：观众视角的"这些数字到底说明什么" -->
+          <div style="background:#F2FAF5;border-left:4px solid #1A8050;padding:11px 16px;border-radius:0 8px 8px 0;font-size:0.42em;color:#3A5040;line-height:1.7;text-align:left;">
+            <div style="font-weight:bold;color:#1A5030;margin-bottom:6px;font-size:1.10em;">这些数字告诉我们什么？</div>
+            <div style="margin-bottom:6px;">
+              <strong style="color:#1A5030;">✓ 首次全面突破：</strong>
+              物种数 99.85%、路径 F1=0.947、全物种布居 <strong>A=1.00 / B=0.99 / C=0.99</strong>——三物种动力学同步首次全部准确。
+            </div>
+            <div style="margin-bottom:6px;">
+              <strong style="color:#C8956C;">↗ 里程碑突破：</strong>
+              修复 <code style="background:rgba(0,0,0,0.06);padding:1px 4px;border-radius:3px;">matrix_exp_pade</code> squaring bug，pop_A/B 从 <strong>0.00 → 0.998/0.991</strong>，val_loss 从 5.6 降至 <strong>2.08（2.7×）</strong>。
+            </div>
+            <div>
+              <strong style="color:#4F8B68;">★ 真实推断：</strong>
+              两文件三物种寿命首次全部命中文献范围——<strong>A=2.4–2.6 ps ✓ &nbsp; B=76–79 ps ✓ &nbsp; C=621–759 ps ✓</strong>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:10px;font-size:0.36em;color:#9A8878;text-align:center;">
+          训练时长：约 2-3 小时 / 300 epoch &nbsp;·&nbsp; H200 单卡 &nbsp;·&nbsp; 数据集 100K 条合成 TA 谱
+        </div>
+      </section>
+
+      <!-- ══ Slide 11.6: 合成数据评估总览 ══ -->
+      <section>
+        <h2 style="margin-bottom:6px;">评估总览（v1.8 · 测试集 sim↔sim）</h2>
+        <p style="font-size:0.42em;color:#9A8878;margin:0 0 8px 0;">
+          10K 测试样本全量评估 &nbsp;·&nbsp; 合成数据生成 → 模型预测 → 指标对比
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 0.9fr;gap:6px;width:97%;margin:0 auto;align-items:center;">
+
+          <!-- 左：评估图（flex-end 让图贴右，gap 才能真正控制与文字的间距） -->
+          <div style="display:flex;justify-content:flex-end;align-items:center;">
+            <img src="metrics_overview.png"
+                 style="display:block;max-width:100%;max-height:62vh;border-radius:8px;border:1px solid #E0D5C5;"
+                 alt="v1.8 metrics overview">
+          </div>
+
+          <!-- 右：逐行说明 -->
+          <div style="display:flex;flex-direction:column;gap:9px;font-size:0.38em;color:#5A4030;text-align:left;">
+
+            <div style="background:#FAF5EE;border-left:3px solid #C8956C;padding:8px 12px;border-radius:0 7px 7px 0;line-height:1.65;">
+              <div style="font-weight:bold;color:#8B5E3C;margin-bottom:4px;">第一行 — 五维任务总览</div>
+              寿命 / 物种数 / 拓扑路径 / 速率 / 布居五大任务的 GT vs 预测柱状对比。右上汇总框关键数字：<strong>spectrum_corr 0.728</strong>、<strong>n_species 99.85%</strong>、<strong>pop_A/B/C 均 &gt;0.99</strong>、lifetime_err <strong>4.19%</strong>。
+            </div>
+
+            <div style="background:#FAF5EE;border-left:3px solid #4F8B68;padding:8px 12px;border-radius:0 7px 7px 0;line-height:1.65;">
+              <div style="font-weight:bold;color:#2A5040;margin-bottom:4px;">第二行 — 六条边速率散点图</div>
+              每图横轴为真实速率、纵轴为预测速率，<strong>点越近对角线误差越小</strong>。A→B 边（最快，MAE 最低）拟合最紧；B→C、C→G（慢速边）散点分布稍宽，但整体仍在 1× 误差带内。
+            </div>
+
+            <div style="background:#FAF5EE;border-left:3px solid #B85450;padding:8px 12px;border-radius:0 7px 7px 0;line-height:1.65;">
+              <div style="font-weight:bold;color:#7A2020;margin-bottom:4px;">第三行 — 速率误差分布 &amp; 边拓扑检测</div>
+              左图：A 物种速率对数误差峰<strong>最窄最高</strong>（预测最稳定），B/C 峰稍宽。右图：边存在概率二分类 <strong>F1 = 0.947</strong>；混淆矩阵显示假正率 <strong>3.9%</strong>、漏检率 <strong>3.3%</strong>，双向误报率均极低。
+            </div>
+
+            <div style="background:#FAF5EE;border-left:3px solid #8B5E3C;padding:8px 12px;border-radius:0 7px 7px 0;line-height:1.65;">
+              <div style="font-weight:bold;color:#5A3010;margin-bottom:4px;">第四行 — 布居曲线 Pearson 相关性分布</div>
+              10K 样本逐条计算布居曲线 Pearson 相关系数并绘制直方图。A 均值 <strong>1.000</strong>（分布几乎全部塞在 1.0，几乎无例外）；B 均值 <strong>0.981</strong>、C 均值 <strong>0.987</strong>，三物种分布均极度集中在 0.95–1.0。
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ Slide: 真实数据推断（CVS 100 μW）══ -->
+      <section>
+        <h2 style="margin-bottom:6px;">真实数据推断结果（CVS · 100 μW 激励）</h2>
+        <p style="font-size:0.42em;color:#9A8878;margin:0 0 10px 0;">
+          未经微调，直接将训练好的 v1.8 模型作用于实验室 TA 谱 &nbsp;·&nbsp; sim→real 零样本推断
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 0.9fr;gap:6px;width:97%;margin:0 auto;align-items:center;">
+
+          <!-- 左：总览图 -->
+          <div style="display:flex;justify-content:flex-end;align-items:center;">
+            <img src="real_inference/100uw_overview.png"
+                 style="display:block;max-width:100%;max-height:62vh;border-radius:8px;border:1px solid #E0D5C5;"
+                 alt="CVS 100uw real inference overview">
+          </div>
+
+          <!-- 右：关键数字 -->
+          <div style="display:flex;flex-direction:column;gap:9px;font-size:0.38em;color:#5A4030;text-align:left;">
+
+            <div style="background:#F2FAF5;border:2px solid #1A8050;border-radius:8px;padding:10px 12px;">
+              <div style="font-weight:bold;color:#1A5030;margin-bottom:6px;font-size:1.05em;">寿命推断 ✓ 全部命中</div>
+              <div style="line-height:2.0;">
+                <span style="display:inline-block;width:14px;height:14px;background:#C8956C;border-radius:50%;vertical-align:middle;margin-right:5px;"></span>
+                <strong>A</strong>：2.61 ps &nbsp;<span style="color:#4F8B68;">✓ (lit 1–3 ps)</span><br>
+                <span style="display:inline-block;width:14px;height:14px;background:#4F8B68;border-radius:50%;vertical-align:middle;margin-right:5px;"></span>
+                <strong>B</strong>：79.0 ps &nbsp;<span style="color:#4F8B68;">✓ (lit 10–80 ps)</span><br>
+                <span style="display:inline-block;width:14px;height:14px;background:#5B8EC4;border-radius:50%;vertical-align:middle;margin-right:5px;"></span>
+                <strong>C</strong>：620.9 ps &nbsp;<span style="color:#4F8B68;">✓ (lit 500–1100 ps)</span>
+              </div>
+            </div>
+
+            <div style="background:#FAF5EE;border:1.5px solid #E0D5C5;border-radius:8px;padding:10px 12px;">
+              <div style="font-weight:bold;color:#8B5E3C;margin-bottom:6px;">峰位对齐</div>
+              <div style="line-height:2.0;color:#5A4030;">
+                A：488.9 nm &nbsp;<span style="color:#9A8878;">(+0.9 nm)</span><br>
+                B：573.5 nm &nbsp;<span style="color:#9A8878;">(−0.5 nm)</span><br>
+                C：604.4 nm &nbsp;<span style="color:#9A8878;">(−3.6 nm)</span>
+              </div>
+            </div>
+
+            <div style="background:#FAF5EE;border:1.5px solid #E0D5C5;border-radius:8px;padding:10px 12px;">
+              <div style="font-weight:bold;color:#8B5E3C;margin-bottom:4px;">重建质量</div>
+              <div style="color:#5A4030;">recon MSE = <strong>0.0302</strong></div>
+              <div style="color:#9A8878;margin-top:3px;font-size:0.90em;">残差集中在短时 hot-state 区域（合成数据未模拟），主结构完整重建</div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ Slide 10: 总结 ══ -->
+      <section>
+        <h2 style="margin-bottom:18px;">总结</h2>
+        <p style="font-size:0.62em;color:#6B6055;width:84%;margin:0 auto 22px;line-height:1.7;">
+          将<strong style="color:#8B5E3C;">看图 · 拟合 · 解 ODE</strong> 数小时的分析流程，压缩为一次<strong style="color:#B85450;">毫秒级</strong>前向传播。
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;width:88%;margin:0 auto;">
+
+          <div class="fragment" style="background:#F5EFE6;border:2px solid #C8956C;border-radius:10px;padding:14px 18px;">
+            <div style="font-size:0.55em;color:#8B5E3C;font-weight:bold;margin-bottom:6px;">① 物理 + 数据双轮驱动</div>
+            <div style="font-size:0.46em;color:#5A4030;line-height:1.6;">
+              非对称 Gaussian 光谱 + ODE 动力学合成 100K 条带标签样本，绕开真实数据稀缺的瓶颈。
+            </div>
+          </div>
+
+          <div class="fragment" style="background:#F5EFE6;border:2px solid #C8956C;border-radius:10px;padding:14px 18px;">
+            <div style="font-size:0.55em;color:#8B5E3C;font-weight:bold;margin-bottom:6px;">② 2D Patch + 全局自注意力</div>
+            <div style="font-size:0.46em;color:#5A4030;line-height:1.6;">
+              100 个 patch 之间任意两两"对话"，捕捉 CNN 看不到的长寿命物种信号。
+            </div>
+          </div>
+
+          <div class="fragment" style="background:#F2FAF5;border:2px solid #1A8050;border-radius:10px;padding:14px 18px;">
+            <div style="font-size:0.55em;color:#1A5030;font-weight:bold;margin-bottom:6px;">③ 一次前向，五项输出</div>
+            <div style="font-size:0.46em;color:#2A4830;line-height:1.6;">
+              物种数 <strong>99.85%</strong> · 谱形相关 <strong>0.728</strong> · 路径 F1 <strong>0.947</strong> · 寿命误差 <strong>4.19%</strong> · 全物种布居 <strong>0.9925</strong>
+            </div>
+          </div>
+
+          <div class="fragment" style="background:#F2FAF5;border:2px solid #4F8B68;border-radius:10px;padding:14px 18px;">
+            <div style="font-size:0.55em;color:#4F8B68;font-weight:bold;margin-bottom:6px;">④ 注意力可解释 + 持续迭代</div>
+            <div style="font-size:0.46em;color:#3A5048;line-height:1.6;">
+              热图显示"浅层探索、深层聚焦"层次化策略；v1.8 已完全解决布居动力学问题，下一步聚焦谱形重建（spectrum_corr 0.73 → 0.85+）。
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ══ Slide 11.7: 版本进化完整对比表 ══ -->
+      <section>
+        <h2 style="margin-bottom:8px;">v0.0 → v1.8 关键版本进化</h2>
+        <p style="font-size:0.40em;color:#9A8878;margin:0 0 10px 0;">
+          <span style="display:inline-block;width:11px;height:11px;background:rgba(79,139,104,0.18);border:1px solid #4F8B68;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>里程碑突破 &nbsp;
+          <span style="display:inline-block;width:11px;height:11px;background:rgba(26,128,80,0.20);border:1px solid #1A8050;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>当前最新 &nbsp;
+          <span style="display:inline-block;width:11px;height:11px;background:rgba(0,0,0,0.06);border:1px solid #CCC;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>实验失败 / 退步 &nbsp;
+          <span style="color:#9A8878;">† = 旧时间轴虚高指标（无物理意义）</span>
+        </p>
+        <div style="overflow-y:auto;max-height:66vh;width:97%;margin:0 auto;">
+          <table style="width:100%;font-size:0.42em;color:#5A4030;border-collapse:collapse;">
+            <thead>
+              <tr style="border-bottom:2px solid #C8956C;color:#8B5E3C;background:#FAF5EE;position:sticky;top:0;">
+                <th style="text-align:left;padding:8px 8px;">版本</th>
+                <th style="text-align:right;padding:8px 6px;">sp_corr</th>
+                <th style="text-align:right;padding:8px 6px;">pop_A</th>
+                <th style="text-align:right;padding:8px 6px;">pop_B</th>
+                <th style="text-align:right;padding:8px 6px;">pop_C</th>
+                <th style="text-align:right;padding:8px 6px;">path_f1</th>
+                <th style="text-align:right;padding:8px 6px;">n_sp</th>
+                <th style="text-align:right;padding:8px 6px;">τ_err</th>
+                <th style="text-align:left;padding:8px 6px;">关键改动</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- v0 时代简写：3 个关键节点 -->
+              <!-- v0.0 基线 -->
+              <tr style="border-bottom:1px dashed #E0D5C5;">
+                <td style="padding:7px 8px;font-weight:bold;color:#5A4030;">v0.0 基线</td>
+                <td style="text-align:right;padding:7px 6px;">0.694</td>
+                <td style="text-align:right;padding:7px 6px;color:#9A8878;">0.960†</td>
+                <td style="text-align:right;padding:7px 6px;color:#C8956C;">0.550†</td>
+                <td style="text-align:right;padding:7px 6px;color:#C8956C;">0.530†</td>
+                <td style="text-align:right;padding:7px 6px;">0.932</td>
+                <td style="text-align:right;padding:7px 6px;">98.3%</td>
+                <td style="text-align:right;padding:7px 6px;">7.36%</td>
+                <td style="padding:7px 6px;color:#9A8878;">初始模型；pop_B/C 低，寿命误差大</td>
+              </tr>
+              <!-- v7 大跳跃 -->
+              <tr style="border-bottom:1px dashed #E0D5C5;background:rgba(79,139,104,0.10);">
+                <td style="padding:7px 8px;color:#2A6040;font-weight:bold;">v0.7 D2-M2 ↑↑</td>
+                <td style="text-align:right;padding:7px 6px;color:#2A6040;font-weight:bold;">0.727</td>
+                <td style="text-align:right;padding:7px 6px;color:#9A8878;">0.948†</td>
+                <td style="text-align:right;padding:7px 6px;color:#2A6040;font-weight:bold;">0.826†</td>
+                <td style="text-align:right;padding:7px 6px;color:#2A6040;font-weight:bold;">0.809†</td>
+                <td style="text-align:right;padding:7px 6px;">0.939</td>
+                <td style="text-align:right;padding:7px 6px;">99.8%</td>
+                <td style="text-align:right;padding:7px 6px;color:#2A6040;font-weight:bold;">4.69%</td>
+                <td style="padding:7px 6px;color:#2A6040;">时序修复 + 数据增强，pop_B/C 大幅提升；经历 v0.3/v0.5 崩溃后的第一次真正突破</td>
+              </tr>
+              <!-- v20 v0 时代终态 -->
+              <tr style="border-bottom:1px dashed #E0D5C5;background:rgba(79,139,104,0.08);">
+                <td style="padding:7px 8px;color:#2A6040;font-weight:bold;">v0.20 D10-M6 ↑†</td>
+                <td style="text-align:right;padding:7px 6px;">0.730</td>
+                <td style="text-align:right;padding:7px 6px;color:#9A8878;">0.978†</td>
+                <td style="text-align:right;padding:7px 6px;color:#9A8878;">0.922†</td>
+                <td style="text-align:right;padding:7px 6px;color:#9A8878;">0.822†</td>
+                <td style="text-align:right;padding:7px 6px;color:#2A6040;font-weight:bold;">0.954</td>
+                <td style="text-align:right;padding:7px 6px;color:#2A6040;font-weight:bold;">99.9%</td>
+                <td style="text-align:right;padding:7px 6px;color:#2A6040;font-weight:bold;">3.07%</td>
+                <td style="padding:7px 6px;color:#2A6040;">v0 时代峰值（旧时间轴），pop 虚高无效，τ_err 最低</td>
+              </tr>
+              <!-- 分隔行：v1 时代 -->
+              <tr style="background:#F5EFE6;">
+                <td colspan="9" style="padding:6px 8px;font-size:0.85em;color:#8B5E3C;font-weight:bold;letter-spacing:0.05em;border-top:2px solid #C8956C;border-bottom:2px solid #C8956C;">
+                  ── v1 时代（v1.0 起，物理时间轴，times_norm bug 修复，pop_A/B 真实测评）──
+                </td>
+              </tr>
+              <!-- v24 时间轴修复后崩溃 -->
+              <tr style="border-bottom:1px dashed #DDD;background:#F4F4F4;color:#ABABAB;">
+                <td style="padding:7px 8px;">v0.24 D10-M9 ✗</td>
+                <td style="text-align:right;padding:7px 6px;">0.622</td>
+                <td style="text-align:right;padding:7px 6px;color:#C00;font-weight:bold;">0.00</td>
+                <td style="text-align:right;padding:7px 6px;color:#C00;font-weight:bold;">0.00</td>
+                <td style="text-align:right;padding:7px 6px;">0.877</td>
+                <td style="text-align:right;padding:7px 6px;">0.836</td>
+                <td style="text-align:right;padding:7px 6px;">91.2%</td>
+                <td style="text-align:right;padding:7px 6px;color:#C00;">24.4%</td>
+                <td style="padding:7px 6px;">物理时间轴修正后旧权重失效，pop_A/B 崩溃揭示真实问题</td>
+              </tr>
+              <!-- v1.6 重训基线 -->
+              <tr style="border-bottom:1px dashed #DDD;background:#F4F4F4;color:#ABABAB;">
+                <td style="padding:7px 8px;">v1.6 D10-M15</td>
+                <td style="text-align:right;padding:7px 6px;">0.704</td>
+                <td style="text-align:right;padding:7px 6px;color:#C00;font-weight:bold;">0.00</td>
+                <td style="text-align:right;padding:7px 6px;color:#C00;font-weight:bold;">0.00</td>
+                <td style="text-align:right;padding:7px 6px;">0.851</td>
+                <td style="text-align:right;padding:7px 6px;">0.902</td>
+                <td style="text-align:right;padding:7px 6px;">98.9%</td>
+                <td style="text-align:right;padding:7px 6px;">21.9%</td>
+                <td style="padding:7px 6px;">重训稳定但 pop_A/B 仍 0；evaluate.py 假说排除，根因未明</td>
+              </tr>
+              <!-- v1.8 里程碑 -->
+              <tr style="background:rgba(26,128,80,0.12);">
+                <td style="padding:7px 8px;color:#1A5030;font-weight:bold;">v1.8 D10-M18 ★</td>
+                <td style="text-align:right;padding:7px 6px;">0.728</td>
+                <td style="text-align:right;padding:7px 6px;color:#1A5030;font-weight:bold;">0.998</td>
+                <td style="text-align:right;padding:7px 6px;color:#1A5030;font-weight:bold;">0.991</td>
+                <td style="text-align:right;padding:7px 6px;color:#1A5030;font-weight:bold;">0.987</td>
+                <td style="text-align:right;padding:7px 6px;color:#1A5030;font-weight:bold;">0.947</td>
+                <td style="text-align:right;padding:7px 6px;color:#1A5030;font-weight:bold;">99.85%</td>
+                <td style="text-align:right;padding:7px 6px;color:#1A5030;font-weight:bold;">4.19%</td>
+                <td style="padding:7px 6px;color:#1A5030;font-weight:bold;">修复 matrix_exp_pade squaring bug → pop_A/B 首次解锁，val_loss 2.7×↓，真实推断三物种全部命中文献范围</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:8px;font-size:0.36em;color:#9A8878;text-align:center;">
+          所有版本均为 h200_large 模式（100K 训练样本，300 epoch，H200 单卡）&nbsp;·&nbsp; 指标越接近 1 越好（τ_err 越低越好）
+        </div>
+      </section>
+
+      <!-- ══ Slide 11: 迭代路线图 ══ -->
+      <section>
+        <h2 style="margin-bottom:10px;">迭代路线图</h2>
+        <p style="font-size:0.58em;color:#6B6055;width:80%;margin:0 auto 24px;line-height:1.7;">
+          合成数据训练已验证物理可行性；下一步将模型推向真实实验环境。
+        </p>
+
+        <!-- 三阶段时间线 -->
+        <div style="display:flex;gap:0;width:90%;margin:0 auto;align-items:stretch;">
+
+          <!-- 阶段一 -->
+          <div class="fragment" data-fragment-index="1" style="flex:1;background:#F5EFE6;border:2px solid #C8956C;border-radius:12px 0 0 12px;padding:18px 16px;position:relative;">
+            <div style="font-size:0.48em;color:#C8956C;font-weight:bold;letter-spacing:0.05em;margin-bottom:6px;">PHASE 2 · 近期</div>
+            <div style="font-size:0.56em;color:#8B5E3C;font-weight:bold;margin-bottom:10px;">真实数据混合微调</div>
+            <div style="font-size:0.42em;color:#5A4030;line-height:1.8;">
+              收集 15–20 个真实 TA 谱（不同溶剂 / 浓度）<br>
+              90% 合成 + 10% 真实交替训练<br>
+              真实批次仅启用 ODE 重建损失（自监督）<br>
+              <span style="color:#C8956C;">目标：recon_mse 0.167 → &lt; 0.12</span>
+            </div>
+          </div>
+
+          <!-- 箭头 -->
+          <div class="fragment" data-fragment-index="2" style="display:flex;align-items:center;padding:0 2px;">
+            <div style="width:0;height:0;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:14px solid #C8956C;"></div>
+          </div>
+
+          <!-- 阶段二 -->
+          <div class="fragment" data-fragment-index="2" style="flex:1;background:#EEF5F0;border:2px solid #4F8B68;border-radius:0;padding:18px 16px;">
+            <div style="font-size:0.48em;color:#4F8B68;font-weight:bold;letter-spacing:0.05em;margin-bottom:6px;">PHASE 3 · 中期</div>
+            <div style="font-size:0.56em;color:#2D6648;font-weight:bold;margin-bottom:10px;">多化合物体系泛化</div>
+            <div style="font-size:0.42em;color:#3A5048;line-height:1.8;">
+              引入不同化合物 TA 数据，提升 domain 覆盖<br>
+              验证模型对不同能级结构的泛化能力<br>
+              探索可选软标签（已知峰位 / 物种数）<br>
+              <span style="color:#4F8B68;">目标：跨样品推断一致性 &gt; 95%</span>
+            </div>
+          </div>
+
+          <!-- 箭头 -->
+          <div class="fragment" data-fragment-index="3" style="display:flex;align-items:center;padding:0 2px;">
+            <div style="width:0;height:0;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:14px solid #4F8B68;"></div>
+          </div>
+
+          <!-- 阶段三 -->
+          <div class="fragment" data-fragment-index="3" style="flex:1;background:#FFF2EE;border:2px solid #B85450;border-radius:0 12px 12px 0;padding:18px 16px;">
+            <div style="font-size:0.48em;color:#B85450;font-weight:bold;letter-spacing:0.05em;margin-bottom:6px;">PHASE 4 · 远期</div>
+            <div style="font-size:0.56em;color:#8B2020;font-weight:bold;margin-bottom:10px;">在线实时分析工具</div>
+            <div style="font-size:0.42em;color:#5A2828;line-height:1.8;">
+              封装为实验室级在线推断接口<br>
+              实验采集完成后毫秒级出结果<br>
+              替代传统手动拟合数小时的流程<br>
+              <span style="color:#B85450;">目标：端到端 latency &lt; 100 ms</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 底部补充 -->
+        <div class="fragment" style="margin-top:20px;width:90%;margin-left:auto;margin-right:auto;background:rgba(139,94,60,0.07);border-left:3px solid #C8956C;border-radius:4px;padding:10px 16px;text-align:left;">
+          <span style="font-size:0.43em;color:#8B5E3C;line-height:1.7;">
+            <strong>关键洞察</strong>：合成数据解决了"从无到有"的物理先验问题；真实数据混合训练将进一步缩小 domain gap，使模型从"推断正确"走向"实验室可用"。
+          </span>
+        </div>
+      </section>
+
+      <!-- ══ Slide 附录: GPU-Manipulate 工作流架构 ══ -->
+      <section>
+        <h2 style="margin-bottom:8px;">GPU-Manipulate 集群训练工作流</h2>
+        <p style="font-size:0.55em;color:#9A8878;margin:0 0 26px 0;">
+          一套封装 SLURM + tmux + watchdog + QQ bot 的 Shell 工具集
+        </p>
+
+        <!-- 主体：本地 ←SSH→ 服务器 双区块 -->
+        <div style="display:grid;grid-template-columns:1fr 140px 1fr;width:96%;margin:0 auto;gap:16px;align-items:stretch;">
+
+          <!-- ── 左：本地 Linux ── -->
+          <div style="border:2px solid #C8956C;border-radius:12px;padding:20px 24px;background:#FAF5EE;display:flex;flex-direction:column;gap:14px;">
+            <div style="font-size:0.55em;font-weight:bold;color:#8B5E3C;border-bottom:1.5px solid rgba(200,149,108,0.28);padding-bottom:8px;">
+              本地 Linux
+            </div>
+
+            <!-- gpu-train-eval -->
+            <div style="border:1.5px solid #C8956C;border-radius:8px;padding:14px 18px;background:rgba(255,255,255,0.72);">
+              <div style="font-size:0.54em;margin-bottom:8px;">
+                <code style="background:#2A1E14;color:#E8C090;padding:3px 10px;border-radius:4px;">gpu-train-eval</code>
+                <span style="color:#9A8878;font-size:0.86em;margin-left:10px;">一键提交</span>
+              </div>
+              <div style="font-size:0.48em;color:#5A4030;line-height:1.7;">
+                生成 chain 脚本 → 走 hold-gpu 或 SLURM 排队
+              </div>
+            </div>
+
+            <!-- gpu-watch -->
+            <div style="border:1.5px solid #4F8B68;border-radius:8px;padding:12px 16px;background:#F2FAF5;">
+              <div style="font-size:0.52em;font-weight:bold;color:#4F8B68;margin-bottom:6px;">
+                gpu-watch &nbsp;<span style="font-weight:normal;color:#7A9888;font-size:0.84em;">30 s 轮询日志</span>
+              </div>
+              <div style="font-size:0.46em;color:#3A5048;line-height:1.7;">
+                扫描 <code style="background:rgba(79,139,104,0.14);padding:1px 5px;border-radius:2px;">ALL_DONE</code> 等完成标记 → 触发推送
+              </div>
+            </div>
+
+            <!-- gpu-monitor -->
+            <div style="border:1.5px solid #9A8878;border-radius:8px;padding:12px 16px;background:#F7F4F0;">
+              <div style="font-size:0.52em;font-weight:bold;color:#6B6055;margin-bottom:6px;">
+                gpu-monitor &nbsp;<span style="font-weight:normal;color:#9A8878;font-size:0.84em;">20 min 健康检查</span>
+              </div>
+              <div style="font-size:0.46em;color:#5A4838;line-height:1.7;">
+                SSH / hold session / 队列 job / 日志错误
+              </div>
+            </div>
+
+            <!-- gpu-notify → QQ → 手机 -->
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#EEF5F0;border-radius:8px;border:1.5px solid #4F8B68;">
+              <code style="background:#2A1E14;color:#88C8A0;padding:3px 10px;border-radius:4px;font-size:0.50em;white-space:nowrap;">gpu-notify</code>
+              <span style="color:#4F8B68;font-weight:bold;font-size:0.60em;">→</span>
+              <span style="font-size:0.48em;color:#3A5048;">QQ bot <strong style="color:#4F8B68;">(openclaw)</strong></span>
+              <span style="color:#4F8B68;font-weight:bold;font-size:0.60em;">→</span>
+              <span style="font-size:0.55em;">📱</span>
+            </div>
+          </div>
+
+          <!-- ── 中：SSH 连接 ── -->
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+            <div style="font-size:0.44em;color:#8B5E3C;font-weight:bold;white-space:nowrap;text-align:center;">SSH</div>
+            <div style="font-size:0.34em;color:#B8A090;white-space:nowrap;text-align:center;">长连接复用</div>
+            <svg width="118" height="20" viewBox="0 0 118 20" style="margin-top:8px;">
+              <line x1="4" y1="10" x2="98" y2="10" stroke="#C8956C" stroke-width="2.5" stroke-dasharray="6,4"/>
+              <polygon points="98,4 98,16 112,10" fill="#C8956C"/>
+            </svg>
+            <div style="font-size:0.34em;color:#8B5E3C;text-align:center;">命令下发</div>
+            <div style="font-size:0.34em;color:#4F8B68;margin-top:10px;text-align:center;">日志回读</div>
+            <svg width="118" height="20" viewBox="0 0 118 20">
+              <polygon points="20,4 20,16 6,10" fill="#4F8B68"/>
+              <line x1="20" y1="10" x2="114" y2="10" stroke="#4F8B68" stroke-width="2.5" stroke-dasharray="6,4"/>
+            </svg>
+            <div style="font-size:0.34em;color:#9A8878;text-align:center;">NFS 共享</div>
+          </div>
+
+          <!-- ── 右：服务器 ── -->
+          <div style="border:2px solid #B85450;border-radius:12px;padding:20px 24px;background:#FFF8F7;display:flex;flex-direction:column;gap:14px;">
+            <div style="font-size:0.55em;font-weight:bold;color:#B85450;border-bottom:1.5px solid rgba(184,84,80,0.22);padding-bottom:8px;">
+              远端 H200 集群
+            </div>
+
+            <!-- tmux hold-gpu -->
+            <div style="border:1.5px solid #B85450;border-radius:8px;padding:14px 18px;background:rgba(255,255,255,0.72);">
+              <div style="font-size:0.54em;font-weight:bold;color:#B85450;margin-bottom:8px;">
+                tmux hold-gpu &nbsp;<span style="font-weight:normal;color:#9A8878;font-size:0.86em;">长驻 GPU</span>
+              </div>
+              <div style="font-size:0.48em;color:#5A3028;line-height:1.75;">
+                <code style="background:rgba(184,84,80,0.12);padding:2px 8px;border-radius:3px;">srun --partition=GPU_H200 ... bash</code>
+                持有计算节点，避免每次重新排队
+              </div>
+            </div>
+
+            <!-- chain 脚本 -->
+            <div style="border:1.5px solid #C8956C;border-radius:8px;padding:14px 18px;background:rgba(255,255,255,0.55);">
+              <div style="font-size:0.52em;font-weight:bold;color:#8B5E3C;margin-bottom:8px;">
+                chain 脚本 &nbsp;<span style="font-weight:normal;color:#9A8878;font-size:0.86em;">串接执行</span>
+              </div>
+              <div style="font-size:0.46em;color:#5A4030;line-height:1.85;">
+                <div>[1] <code style="background:rgba(60,40,20,0.08);padding:1px 5px;border-radius:2px;">train.py</code> → train_small.log</div>
+                <div>[2] <code style="background:rgba(60,40,20,0.08);padding:1px 5px;border-radius:2px;">evaluate.py</code> → evaluate_small.log</div>
+                <div><span style="color:#4F8B68;font-weight:bold;">✓</span> <code style="background:rgba(79,139,104,0.15);color:#2A5040;padding:1px 5px;border-radius:2px;">echo ALL_DONE</code></div>
+              </div>
+            </div>
+
+            <!-- NFS 共享 -->
+            <div style="border:1.5px dashed #9A8878;border-radius:8px;padding:12px 16px;background:#F7F4F0;font-size:0.46em;color:#5A4838;line-height:1.7;">
+              <strong style="color:#6B6055;">共享 NFS</strong>　<code style="background:rgba(60,40,20,0.08);padding:1px 6px;border-radius:2px;">~/ta-transformer/</code>
+              ——日志、脚本、checkpoint 双向可见
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+  </div>
+
+  <script src="dist/reveal.js"></script>
+  <script src="dist/plugin/highlight.js"></script>
+  <script src="dist/plugin/math.js"></script>
+
+  <script>
+    Reveal.initialize({
+      hash: true,
+      overview: false,
+      slideNumber: 'c/t',
+      center: true,
+      transition: 'slide',
+      width: 1920,
+      height: 1080,
+      margin: 0.02,
+      keyboard: { 27: null, 79: null },
+      mathjax3: {
+        mathjax: 'lib/mathjax/es5/tex-mml-svg.js?v=svg2',
+        tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+        svg: { fontCache: 'global', scale: 1.0 }
+      },
+      plugins: [RevealHighlight, RevealMath.MathJax3()]
+    });
+
+    Reveal.on('slidechanged', function(event) {
+      var idx = event.indexh;
+      document.querySelectorAll('.floating-nav a[data-from]').forEach(function(link) {
+        var from = parseInt(link.dataset.from);
+        var to   = parseInt(link.dataset.to);
+        link.classList.toggle('active', idx >= from && idx <= to);
+      });
+    });
+
+    // ── 扇形地图模式（O 键触发，替代 Reveal 内置 overview）──
+    (function () {
+      var _fan = null;
+
+      function openFan() {
+        if (_fan) return;
+
+        var W  = window.innerWidth;
+        var H  = window.innerHeight;
+        var slides = Array.from(document.querySelectorAll('.reveal .slides > section'));
+        var N  = slides.length;
+        var cur = Reveal.getState().indexh;
+
+        // 扇形几何参数
+        var STEP   = 5;                              // 每张卡片间隔角度(°)
+        var R      = Math.min(W * 0.58, H * 0.94);  // 扇形半径
+        var CX     = W / 2;
+        var CY     = H + R * 0.28;                  // 圆心在屏幕下方
+        var CW     = Math.min(W * 0.11, 210);        // 卡片宽度(px)
+        var CH     = CW * 9 / 16;                    // 卡片高度(16:9)
+        var SC     = CW / 1920;                      // 内容缩放比
+
+        // 全屏覆盖层
+        var ov = document.createElement('div');
+        ov.id = 'fan-overview';
+        ov.style.cssText = [
+          'position:fixed', 'inset:0', 'z-index:5000', 'overflow:hidden',
+          'background:linear-gradient(135deg,#1C1209 0%,#2D1E10 55%,#181008 100%)',
+          'opacity:0', 'transition:opacity 0.30s ease', 'cursor:default'
+        ].join(';');
+
+        // 顶部提示条
+        var lbl = document.createElement('div');
+        lbl.style.cssText = [
+          'position:absolute', 'top:20px', 'left:50%',
+          'transform:translateX(-50%)', 'z-index:1',
+          'background:rgba(28,18,9,0.90)', 'backdrop-filter:blur(14px)',
+          'border:1px solid rgba(200,149,108,0.38)', 'color:#E8C090',
+          'font-size:13px', 'padding:7px 22px', 'border-radius:30px',
+          'white-space:nowrap', 'pointer-events:none', 'letter-spacing:0.05em'
+        ].join(';');
+        lbl.innerHTML = '幻灯片地图 &nbsp;·&nbsp; 点击跳转 &nbsp;·&nbsp;'
+          + ' <kbd style="background:rgba(200,149,108,0.18);border:1px solid rgba(200,149,108,0.38);border-radius:4px;padding:1px 8px;">O</kbd>'
+          + ' / <kbd style="background:rgba(200,149,108,0.18);border:1px solid rgba(200,149,108,0.38);border-radius:4px;padding:1px 8px;">Esc</kbd> 退出';
+        ov.appendChild(lbl);
+
+        // 逐张生成卡片
+        slides.forEach(function (sec, i) {
+          var angleDeg = -90 + (i - (N - 1) / 2) * STEP;
+          var angleRad = angleDeg * Math.PI / 180;
+          var cx = CX + R * Math.cos(angleRad);
+          var cy = CY + R * Math.sin(angleRad);
+          var rotDeg = (i - (N - 1) / 2) * STEP;
+          var isCur  = (i === cur);
+
+          var card = document.createElement('div');
+          card.style.cssText = [
+            'position:absolute',
+            'left:' + (cx - CW / 2) + 'px',
+            'top:'  + (cy - CH / 2) + 'px',
+            'width:'  + CW + 'px',
+            'height:' + CH + 'px',
+            'border-radius:7px', 'overflow:hidden', 'cursor:pointer',
+            'transform:rotate(' + rotDeg + 'deg)',
+            'transition:transform 0.18s ease,box-shadow 0.18s ease',
+            'background:#FAF8F4',
+            'box-shadow:' + (isCur
+              ? '0 0 0 3px #C8956C,0 14px 44px rgba(200,149,108,0.60)'
+              : '0 6px 26px rgba(0,0,0,0.70),0 0 0 1px rgba(200,149,108,0.22)')
+          ].join(';');
+
+          // 封面页特殊背景
+          var bgGrad = sec.getAttribute('data-background-gradient');
+          if (bgGrad) card.style.background = bgGrad;
+
+          // 内容克隆（缩放至卡片尺寸）
+          var inner = document.createElement('div');
+          inner.style.cssText = [
+            'position:absolute', 'top:0', 'left:0',
+            'width:1920px', 'height:1080px',
+            'transform:scale(' + SC + ')', 'transform-origin:0 0',
+            'pointer-events:none'
+          ].join(';');
+          var clone = sec.cloneNode(true);
+          clone.style.cssText = 'display:block;position:relative;width:1920px;height:1080px;overflow:hidden;';
+          // 让所有 fragment 可见
+          clone.querySelectorAll('.fragment').forEach(function (f) {
+            f.style.opacity = '1'; f.style.visibility = 'visible';
+          });
+          inner.appendChild(clone);
+          card.appendChild(inner);
+
+          // 页码角标
+          var badge = document.createElement('div');
+          badge.style.cssText = [
+            'position:absolute', 'bottom:5px', 'right:7px',
+            'background:rgba(20,12,6,0.75)', 'color:#C8956C',
+            'font-size:' + Math.round(CW * 0.065) + 'px', 'font-weight:bold',
+            'padding:2px 8px', 'border-radius:10px', 'z-index:2', 'pointer-events:none'
+          ].join(';');
+          badge.textContent = i + 1;
+          card.appendChild(badge);
+
+          // 悬停：向上抬起 + 铜橙光晕
+          var baseT  = 'rotate(' + rotDeg + 'deg)';
+          var hoverT = 'translateY(-22px) rotate(' + rotDeg + 'deg) scale(1.07)';
+          card.addEventListener('mouseenter', function () {
+            this.style.transform = hoverT;
+            this.style.boxShadow = '0 20px 52px rgba(200,149,108,0.48),0 0 0 2.5px rgba(200,149,108,0.75)';
+          });
+          card.addEventListener('mouseleave', function () {
+            this.style.transform = baseT;
+            this.style.boxShadow = isCur
+              ? '0 0 0 3px #C8956C,0 14px 44px rgba(200,149,108,0.60)'
+              : '0 6px 26px rgba(0,0,0,0.70),0 0 0 1px rgba(200,149,108,0.22)';
+          });
+          card.addEventListener('click', function (e) {
+            e.stopPropagation();
+            Reveal.slide(i);
+            closeFan();
+          });
+
+          ov.appendChild(card);
+        });
+
+        // 点击背景关闭
+        ov.addEventListener('click', function () { closeFan(); });
+
+        document.body.appendChild(ov);
+        _fan = ov;
+        // 双 rAF 确保浏览器先完成布局再触发淡入
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { ov.style.opacity = '1'; });
+        });
+      }
+
+      function closeFan() {
+        if (!_fan) return;
+        var ov = _fan; _fan = null;
+        ov.style.opacity = '0';
+        setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 320);
+      }
+
+      // O 键切换，Esc 关闭
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'o' || e.key === 'O') { _fan ? closeFan() : openFan(); e.preventDefault(); }
+        if (e.key === 'Escape' && _fan)     { closeFan(); e.preventDefault(); }
+      });
+    })();
+  </script>
+
+</body>
+</html>

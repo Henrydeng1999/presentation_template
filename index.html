@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presentations</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+      background: #F7F3EE;
+      color: #3A2A1A;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 72px 24px 80px;
+    }
+
+    h1 {
+      font-size: 1.45rem;
+      font-weight: 300;
+      color: #8B5E3C;
+      letter-spacing: 0.16em;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 0.76rem;
+      color: #B8A090;
+      letter-spacing: 0.05em;
+      margin-bottom: 56px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 18px;
+      width: 100%;
+      max-width: 960px;
+    }
+
+    .card {
+      background: #FFFFFF;
+      border: 1px solid #E8DDD4;
+      border-radius: 14px;
+      padding: 26px 26px 20px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #C8956C, #E8B48C);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .card:hover {
+      border-color: #C8956C;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(139,94,60,0.12);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-tag {
+      font-size: 0.67rem;
+      color: #C8956C;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #2A1A0A;
+      line-height: 1.45;
+    }
+
+    .card-desc {
+      font-size: 0.75rem;
+      color: #7A6858;
+      line-height: 1.75;
+      flex: 1;
+    }
+
+    .card-meta {
+      font-size: 0.67rem;
+      color: #C0AFA0;
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #F0E8E0;
+      padding-top: 12px;
+    }
+
+    .card-arrow {
+      font-size: 0.82rem;
+      color: #C8956C;
+      opacity: 0.5;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .card:hover .card-arrow {
+      opacity: 1;
+      transform: translateX(4px);
+    }
+
+    footer {
+      margin-top: 64px;
+      font-size: 0.67rem;
+      color: #C8BAB0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Presentations</h1>
+  <p class="subtitle">点击卡片打开对应幻灯片</p>
+
+  <div class="grid">
+
+    <!-- ── TA-Transformer ── -->
+    <a class="card" href="ta-transformer.html">
+      <div class="card-tag">物理 · 深度学习</div>
+      <div class="card-title">TA-Transformer<br>瞬态吸收光谱智能解析</div>
+      <div class="card-desc">
+        多任务 Transformer，一次前向传播同时输出物种数、谱图、反应拓扑、速率常数与浓度动力学。合成数据训练，真实 CVS 推断三物种寿命全部进入文献范围。
+      </div>
+      <div class="card-meta">
+        <span>2026-05-17 · v20 D10-M6 · 22 页</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- ── 占位：下一个幻灯片 ── -->
+    <!--
+    <a class="card" href="next-talk.html">
+      <div class="card-tag">标签</div>
+      <div class="card-title">标题</div>
+      <div class="card-desc">简介</div>
+      <div class="card-meta">
+        <span>日期 · 页数</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+    -->
+
+  </div>
+
+  <footer>新增幻灯片：将 HTML 放入此目录，在 index.html 中取消注释模板卡片并填写信息。</footer>
+
+</body>
+</html>
